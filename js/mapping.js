@@ -215,21 +215,40 @@ export function computeUV(pos, normal, mode, settings, bounds) {
         sideSamples = [{ u: tSide.u, v: tSide.v, w: 1 }];
       }
 
-      if (blend <= 0.001) {
+      const capMode = settings.cylinderCapMode ?? 'smooth';
+      if (capMode === 'radial') {
         if (sideSamples.length === 1 && sideSamples[0].w === 1) return sideSamples[0];
         return { triplanar: true, samples: sideSamples };
       }
 
-      const capThreshold = Math.cos((settings.capAngle ?? 20) * Math.PI / 180);
-      const blendHalf = (settings.seamBandWidth ?? 0.5) * 0.5;
+      const capCos = Math.cos((settings.capAngle ?? 20) * Math.PI / 180);
+      const seamBandWidth = settings.seamBandWidth ?? 0.5;
+      const blendWidth = Math.max(0.01, Math.min(0.3, seamBandWidth * 0.2));
+      const capMin = Math.max(0, capCos - blendWidth);
       const absnz = Math.abs(normal.z);
-      const capW = Math.max(0, Math.min(1, (absnz - (capThreshold - blendHalf)) / (2 * blendHalf + 1e-6)));
+
+      let capW = 0;
+      if (absnz >= capCos) {
+        capW = 1;
+      } else if (absnz > capMin) {
+        const t = (absnz - capMin) / (capCos - capMin);
+        capW = t * t * (3 - 2 * t);
+      }
 
       if (capW <= 0) {
         if (sideSamples.length === 1 && sideSamples[0].w === 1) return sideSamples[0];
         return { triplanar: true, samples: sideSamples };
       }
 
+      if (capMode === 'smooth') {
+        if (capW >= 1) {
+          return { isNeutral: true, u: 0, v: 0 };
+        }
+        const samples = sideSamples.map(s => ({ u: s.u, v: s.v, w: s.w * (1 - capW) }));
+        return { triplanar: true, samples, neutralWeight: capW };
+      }
+
+      // capMode === 'planar'
       const uCap  = rx / C + 0.5;
       const vCap  = ry / C + 0.5;
       const tCap = applyTransform(uCap, vCap, scaleU, scaleV, offsetU, offsetV, cosR, sinR);

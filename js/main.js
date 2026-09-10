@@ -131,6 +131,7 @@ const settings = {
   cylinderCenterX:  null,
   cylinderCenterY:  null,
   cylinderRadius:   null,
+  cylinderCapMode:  'smooth',
   cylinderPanelMinimized: false,
   // Regularize Mesh.  Two-step pipeline applied after the initial subdivide:
   // collapse sliver chains, then re-subdivide stretched edges back to a
@@ -345,6 +346,8 @@ const textureSmoothingVal    = document.getElementById('texture-smoothing-val');
 const capAngleSlider         = document.getElementById('cap-angle');
 const capAngleVal            = document.getElementById('cap-angle-val');
 const capAngleRow            = document.getElementById('cap-angle-row');
+const cylinderCapRow         = document.getElementById('cylinder-cap-row');
+const cylinderCapMode        = document.getElementById('cylinder-cap-mode');
 const cylinderSnapRow        = document.getElementById('cylinder-snap-row');
 const cylinderSnapToggle     = document.getElementById('cylinder-snap-toggle');
 const cylinderAxisRow        = document.getElementById('cylinder-axis-row');
@@ -353,6 +356,8 @@ const cylinderResetBtn       = document.getElementById('cylinder-reset-btn');
 const cylinderPanel          = document.getElementById('cylinder-panel');
 const cylinderCanvas         = document.getElementById('cylinder-canvas');
 const cylinderPanelMinimize  = document.getElementById('cylinder-panel-minimize');
+const cylinderPanelAutofitBtn = document.getElementById('cylinder-panel-autofit-btn');
+const cylinderPanelResetBtn   = document.getElementById('cylinder-panel-reset-btn');
 const boundaryFalloffSlider    = document.getElementById('boundary-falloff');
 const boundaryFalloffVal       = document.getElementById('boundary-falloff-val');
 const falloffCurveButtons      = {
@@ -884,6 +889,8 @@ function updateCylinderUIVisibility() {
   // and spherical); the rest of this panel is cylinder-only.
   cylinderSnapRow.style.display = _isSeamlessWrapMode() ? '' : 'none';
   cylinderAxisRow.style.display = isCyl ? '' : 'none';
+  if (cylinderCapRow) cylinderCapRow.style.display = isCyl ? '' : 'none';
+  if (capAngleRow)    capAngleRow.style.display    = (isCyl && settings.cylinderCapMode !== 'radial') ? '' : 'none';
   // Show the panel whenever the user is in cylindrical mode, even without a
   // model loaded — they get the empty placeholder until they load one, which
   // makes it clear that the gizmo will appear there.
@@ -1006,7 +1013,7 @@ async function switchLanguage(lang) {
   });
 
   // Re-translate <option> elements (innerHTML won't reach these)
-  document.querySelectorAll('#mapping-mode option[data-i18n-opt]').forEach(opt => {
+  document.querySelectorAll('option[data-i18n-opt]').forEach(opt => {
     opt.textContent = t(opt.dataset.i18nOpt);
   });
 
@@ -1394,7 +1401,6 @@ function wireEvents() {
   // ── Settings ──
   mappingSelect.addEventListener('change', () => {
     settings.mappingMode = parseInt(mappingSelect.value, 10);
-    capAngleRow.style.display = settings.mappingMode === 3 ? '' : 'none';
     updateCylinderUIVisibility();
     // The wrap circumference is mode-specific (cylinder vs sphere equator),
     // so entering a wrap mode with snapping on re-snaps the U scale.
@@ -1404,6 +1410,17 @@ function wireEvents() {
     updatePreview();
   });
 
+  if (cylinderCapMode) {
+    cylinderCapMode.addEventListener('change', () => {
+      settings.cylinderCapMode = cylinderCapMode.value;
+      if (capAngleRow) {
+        capAngleRow.style.display = (settings.mappingMode === 3 && settings.cylinderCapMode !== 'radial') ? '' : 'none';
+      }
+      updatePreview();
+      _autoSaveSettings();
+    });
+  }
+
   cylinderSnapToggle.addEventListener('change', () => {
     settings.snapSeamlessWrap = cylinderSnapToggle.checked;
     if (settings.snapSeamlessWrap && _isSeamlessWrapMode()) {
@@ -1412,14 +1429,16 @@ function wireEvents() {
     }
   });
 
-  cylinderAutofitBtn.addEventListener('click', () => {
+  const handleCylinderAutofit = () => {
     if (autoFitCylinderAxis()) {
       _scheduleCylinderPanelRedraw();
       updatePreview();
       requestRender();
       _autoSaveSettings();
     }
-  });
+  };
+  cylinderAutofitBtn?.addEventListener('click', handleCylinderAutofit);
+  cylinderPanelAutofitBtn?.addEventListener('click', handleCylinderAutofit);
 
   cylinderPanelMinimize.addEventListener('click', () => {
     settings.cylinderPanelMinimized = !settings.cylinderPanelMinimized;
@@ -1428,20 +1447,23 @@ function wireEvents() {
     _autoSaveSettings();
   });
 
-  cylinderResetBtn.addEventListener('click', () => {
+  const handleCylinderReset = () => {
     settings.cylinderCenterX = null;
     settings.cylinderCenterY = null;
     settings.cylinderRadius  = null;
-    // Also undo any panning so the silhouette returns to its default framing.
+    // Also undo any panning and scaling so the silhouette returns to its default framing.
     if (_cylSilhouetteAnchor && _cylPanelTransform) {
       _cylPanelTransform.cxw = _cylSilhouetteAnchor.cxw;
       _cylPanelTransform.cyw = _cylSilhouetteAnchor.cyw;
+      if (_cylSilhouetteAnchor.scale) _cylPanelTransform.scale = _cylSilhouetteAnchor.scale;
     }
     _scheduleCylinderPanelRedraw();
     updatePreview();
     requestRender();
     _autoSaveSettings();
-  });
+  };
+  cylinderResetBtn?.addEventListener('click', handleCylinderReset);
+  cylinderPanelResetBtn?.addEventListener('click', handleCylinderReset);
 
   // Scale U — when lock is on, mirror to V
   const applyScaleU = (v) => _applyScaleU(v);
@@ -5252,6 +5274,7 @@ const PERSISTED_KEYS = [
   // Cylindrical-mode controls. cylinderCenterX/Y/radius are nullable —
   // null means "fall back to AABB defaults", which is what fresh loads get.
   'snapSeamlessWrap', 'cylinderCenterX', 'cylinderCenterY', 'cylinderRadius',
+  'cylinderCapMode',
   'cylinderPanelMinimized',
 ];
 
@@ -5402,6 +5425,10 @@ function applySettingsSnapshot(snap) {
   if ('cylinderCenterX' in snap) settings.cylinderCenterX = snap.cylinderCenterX;
   if ('cylinderCenterY' in snap) settings.cylinderCenterY = snap.cylinderCenterY;
   if ('cylinderRadius'  in snap) settings.cylinderRadius  = snap.cylinderRadius;
+  if (snap.cylinderCapMode != null) {
+    settings.cylinderCapMode = snap.cylinderCapMode;
+    if (cylinderCapMode) cylinderCapMode.value = snap.cylinderCapMode;
+  }
   if ('cylinderPanelMinimized' in snap) {
     settings.cylinderPanelMinimized = !!snap.cylinderPanelMinimized;
     cylinderPanel.classList.toggle('minimized', settings.cylinderPanelMinimized);
@@ -5485,6 +5512,7 @@ const DEFAULT_SETTINGS_SNAPSHOT = Object.freeze({
   refineLength: 1, maxTriangles: 750000,
   snapSeamlessWrap: true,
   cylinderCenterX: null, cylinderCenterY: null, cylinderRadius: null,
+  cylinderCapMode: 'smooth',
   cylinderPanelMinimized: false,
   activeMapName: DEFAULT_PRESET_NAME,
 });

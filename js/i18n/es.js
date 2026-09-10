@@ -254,6 +254,10 @@ export default {
   "ui.cylinderPanelAria": "Posicionamiento del eje del cilindro",
   "ui.cylinderPanelLabel": "Definir proyección cilíndrica",
   "ui.cylinderNoModel1": "Carga un modelo para",
-  "ui.cylinderNoModel2": "colocar el eje del cilindro",
-  "ui.cylinderPanelMinimize": "Minimizar / restaurar"
+  "ui.cylinderPanelMinimize": "Minimizar / restaurar",
+  "labels.cylinderCapMode": "Tratamiento de tapas ⓘ",
+  "tooltips.cylinderCapMode": "Controla cómo se proyecta la textura en las caras planas superior e inferior del cilindro.",
+  "cylinderCap.smooth": "Tapa lisa (sin relieve)",
+  "cylinderCap.planar": "Tapa plana (proyectada)",
+  "cylinderCap.radial": "Radial continua"
 };

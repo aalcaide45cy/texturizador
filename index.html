@@ -128,7 +128,6 @@
         <div id="cylinder-panel" class="cylinder-panel hidden"
           data-i18n-aria-label="ui.cylinderPanelAria"
           aria-label="Cylinder axis placement">
-          <canvas id="cylinder-canvas" width="240" height="240"></canvas>
           <div class="cylinder-panel-label">
             <span data-i18n="ui.cylinderPanelLabel">Definir proyección cilíndrica</span>
             <button id="cylinder-panel-minimize" class="cylinder-panel-minimize"
@@ -139,6 +138,17 @@
               <svg class="icon-minimize" width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
               <svg class="icon-expand" width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
+          </div>
+          <canvas id="cylinder-canvas" width="240" height="240"></canvas>
+          <div class="cylinder-panel-actions">
+            <button id="cylinder-panel-autofit-btn" type="button" class="cylinder-panel-btn"
+              data-i18n="ui.cylinderAutofit"
+              data-i18n-title="tooltips.cylinderAutofit"
+              title="Ajustar automáticamente al modelo">Auto-ajuste</button>
+            <button id="cylinder-panel-reset-btn" type="button" class="cylinder-panel-btn"
+              data-i18n="ui.cylinderReset"
+              data-i18n-title="tooltips.cylinderReset"
+              title="Restablecer posición y radio iniciales">Restablecer</button>
           </div>
         </div>
         </div>
@@ -258,8 +268,16 @@
           <input type="range" id="seam-band-width" min="0" max="1" step="0.01" value="0.5" />
           <input type="number" class="val" id="seam-band-width-val" value="0.5" min="0" max="1" step="0.01" data-wheel-decimals="2" />
         </div>
+        <div class="form-row" id="cylinder-cap-row" style="display:none">
+          <label for="cylinder-cap-mode" data-i18n="labels.cylinderCapMode" data-i18n-title="tooltips.cylinderCapMode" title="Controla cómo se proyecta la textura en las caras planas superior e inferior del cilindro.">Tratamiento de tapas ⓘ</label>
+          <select id="cylinder-cap-mode">
+            <option value="smooth" selected data-i18n-opt="cylinderCap.smooth">Tapa lisa (sin relieve)</option>
+            <option value="planar" data-i18n-opt="cylinderCap.planar">Tapa plana (proyectada)</option>
+            <option value="radial" data-i18n-opt="cylinderCap.radial">Radial continua</option>
+          </select>
+        </div>
         <div class="form-row slider-row" id="cap-angle-row" style="display:none">
-          <label for="cap-angle" data-i18n="labels.capAngle" data-i18n-title="tooltips.capAngle" title="Angle (in degrees) from vertical at which the top/bottom cap projection kicks in. Smaller values limit cap projection to nearly flat faces.">Ángulo de tapa ⓘ</label>
+          <label for="cap-angle" data-i18n="labels.capAngle" data-i18n-title="tooltips.capAngle" title="Ángulo (en grados) respecto a la vertical a partir del cual se considera tapa.">Ángulo de tapa ⓘ</label>
           <input type="range" id="cap-angle" min="1" max="89" step="1" value="20" />
           <input type="number" class="val" id="cap-angle-val" value="20" min="1" max="89" step="1" />
         </div>

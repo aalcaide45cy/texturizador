@@ -955,7 +955,7 @@ input[type="number"].val:focus { outline: none; border-color: var(--accent); }
   top: 14px;
   left: 14px;
   width: 240px;
-  height: 276px;
+  height: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -978,21 +978,56 @@ input[type="number"].val:focus { outline: none; border-color: var(--accent); }
   touch-action: none;
 }
 
-/* Width stays the same when minimized; only the canvas collapses away. */
+/* Width stays the same when minimized; only the canvas and actions collapse away. */
 .cylinder-panel.minimized { height: auto; }
-.cylinder-panel.minimized canvas { display: none; }
+.cylinder-panel.minimized canvas,
+.cylinder-panel.minimized .cylinder-panel-actions { display: none; }
 
 .cylinder-panel-label {
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--text-muted);
-  padding: 6px 8px;
-  flex: 1;
+  padding: 6px 10px;
+  flex: 0 0 auto;
   letter-spacing: 0.02em;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 24px;
+  min-height: 26px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cylinder-panel-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cylinder-panel-btn {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.cylinder-panel-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .cylinder-panel-minimize {

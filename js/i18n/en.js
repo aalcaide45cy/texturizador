@@ -251,6 +251,10 @@ export default {
   "ui.cylinderPanelAria": "Cylinder axis placement",
   "ui.cylinderPanelLabel": "Define cylinder projection",
   "ui.cylinderNoModel1": "Load a model to position",
-  "ui.cylinderNoModel2": "the cylinder axis",
-  "ui.cylinderPanelMinimize": "Minimize / restore"
+  "ui.cylinderPanelMinimize": "Minimize / restore",
+  "labels.cylinderCapMode": "Cap Treatment ⓘ",
+  "tooltips.cylinderCapMode": "Controls how the texture is projected onto the top and bottom flat cylinder caps.",
+  "cylinderCap.smooth": "Smooth cap (no texture)",
+  "cylinderCap.planar": "Planar cap (projected)",
+  "cylinderCap.radial": "Radial continuous"
 };

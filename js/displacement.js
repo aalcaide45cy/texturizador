@@ -1,4 +1,4 @@
-﻿/* Texturizador */
+/* Texturizador */
 
 import { THREE } from './threeCompat.js';
 import { computeUV, getDominantCubicAxis, getCubicBlendWeights, scaleMmToRelative } from './mapping.js';
@@ -498,10 +498,16 @@ export function applyDisplacement(geometry, imageData, imgWidth, imgHeight, sett
 
     const uvResult = computeUV(tmpPos, tmpNrm, settings.mappingMode, settingsWithAspect, bounds);
     let grey;
-    if (uvResult.triplanar) {
+    const neutralGrey = settings.symmetricDisplacement ? 0.5 : 0.0;
+    if (uvResult.isNeutral) {
+      grey = neutralGrey;
+    } else if (uvResult.triplanar) {
       grey = 0;
       for (const s of uvResult.samples) {
         grey += sampleBilinear(imageData.data, imgWidth, imgHeight, s.u, s.v) * s.w;
+      }
+      if (uvResult.neutralWeight) {
+        grey += neutralGrey * uvResult.neutralWeight;
       }
     } else {
       grey = sampleBilinear(imageData.data, imgWidth, imgHeight, uvResult.u, uvResult.v);

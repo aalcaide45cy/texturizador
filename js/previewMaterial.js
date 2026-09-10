@@ -41,6 +41,7 @@ const sharedGLSL = /* glsl */`
   uniform float     mappingBlend;
   uniform float     seamBandWidth;
   uniform float     capAngle;
+  uniform float     cylinderCapMode;
   uniform int       symmetricDisplacement;
   uniform int       noDownwardZ;
   uniform int       useDisplacement;
@@ -144,11 +145,27 @@ const sharedGLSL = /* glsl */`
         hSide = sampleMap(vec2(u_cyl, v_cyl));
       }
 
-      if (mappingBlend < 0.001) return hSide;
-      float capThreshold = cos(radians(capAngle));
-      float blendHalf = seamBandWidth * 0.5;
-      float capW = smoothstep(capThreshold - blendHalf, capThreshold + blendHalf, abs(blendN.z));
-      float hCap  = sampleMap(vec2(cylRel2.x / C + 0.5, cylRel2.y / C + 0.5));
+      if (cylinderCapMode > 1.5) {
+        // Radial mode: wrap across all faces without cap blending
+        return hSide;
+      }
+
+      // Cap detection: surfaces whose normal is within capAngle of the Z axis.
+      // Use max(abs(projN.z), abs(blendN.z)) to ensure flat caps are reliably detected.
+      float absZ = max(abs(projN.z), abs(blendN.z));
+      float capCos = cos(radians(capAngle));
+      float blendWidth = clamp(seamBandWidth * 0.2, 0.01, 0.3);
+      float capMin = max(0.0, capCos - blendWidth);
+      float capW = smoothstep(capMin, capCos, absZ);
+
+      if (cylinderCapMode > 0.5) {
+        // Smooth cap mode: flat, untextured top and bottom faces (ideal for 3D printing)
+        float neutralH = symmetricDisplacement == 1 ? 0.5 : 0.0;
+        return mix(hSide, neutralH, capW);
+      }
+
+      // Planar cap mode: project cleanly along Z axis onto the top/bottom faces (no radial starburst)
+      float hCap = sampleMap(vec2(cylRel2.x / C + 0.5, cylRel2.y / C + 0.5));
       return mix(hSide, hCap, capW);
 
     } else if (mappingMode == 4) {
@@ -465,6 +482,9 @@ export function updateMaterial(material, displacementTexture, settings) {
   u.mappingBlend.value            = settings.mappingBlend            ?? 0.0;
   u.seamBandWidth.value           = settings.seamBandWidth           ?? 0.35;
   u.capAngle.value                = settings.capAngle                ?? 20.0;
+  u.cylinderCapMode.value         = settings.cylinderCapMode === 'radial' ? 2.0
+                                  : settings.cylinderCapMode === 'planar' ? 0.0
+                                  : 1.0;
   u.symmetricDisplacement.value   = settings.symmetricDisplacement   ? 1 : 0;
   u.noDownwardZ.value             = settings.noDownwardZ             ? 1 : 0;
   u.useDisplacement.value         = settings.useDisplacement         ? 1 : 0;
@@ -502,6 +522,9 @@ function buildUniforms(tex, settings) {
     mappingBlend:             { value: settings.mappingBlend            ?? 0.0 },
     seamBandWidth:            { value: settings.seamBandWidth            ?? 0.35 },
     capAngle:                 { value: settings.capAngle                 ?? 20.0 },
+    cylinderCapMode:          { value: settings.cylinderCapMode === 'radial' ? 2.0
+                                     : settings.cylinderCapMode === 'planar' ? 0.0
+                                     : 1.0 },
     symmetricDisplacement:    { value: settings.symmetricDisplacement   ? 1 : 0 },
     noDownwardZ:              { value: settings.noDownwardZ             ? 1 : 0 },
     useDisplacement:          { value: settings.useDisplacement         ? 1 : 0 },
