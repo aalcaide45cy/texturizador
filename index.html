@@ -155,7 +155,44 @@
               title="Restablecer posición y radio iniciales">Restablecer</button>
           </div>
         </div>
+
+        <!-- Floating Viewport Mask Toolbar -->
+        <div id="viewport-mask-bar" class="viewport-mask-bar">
+          <button id="viewport-mask-toggle-btn" type="button" class="viewport-mask-btn"
+            data-i18n-title="ui.viewportMaskTitle" title="Elegir o pintar zonas sin textura">
+            <span class="viewport-mask-btn-icon">🖌️</span>
+            <span data-i18n="ui.viewportMaskBtn">Zonas sin textura</span>
+            <span id="viewport-mask-badge" class="viewport-mask-badge hidden">0</span>
+          </button>
+          <div id="viewport-mask-popover" class="viewport-mask-popover hidden">
+            <div class="viewport-mask-popover-header">
+              <span class="viewport-mask-popover-title" data-i18n="sections.masking">Zonas sin textura</span>
+              <button id="viewport-mask-close-btn" type="button" class="viewport-mask-popover-close" aria-label="Cerrar">×</button>
+            </div>
+            <div class="viewport-mask-tools">
+              <button id="vport-tool-brush" type="button" class="vport-tool-btn" data-i18n-title="excl.toolBrushTitle" title="Pincel">
+                <span>🖌️</span> <span data-i18n="excl.toolBrush">Pincel</span>
+              </button>
+              <button id="vport-tool-fill" type="button" class="vport-tool-btn" data-i18n-title="excl.toolFillTitle" title="Relleno">
+                <span>🪣</span> <span data-i18n="excl.toolFill">Relleno</span>
+              </button>
+              <button id="vport-tool-invert" type="button" class="vport-tool-btn" data-i18n-title="excl.invertTitle" title="Invertir zonas">
+                <span>⇄</span> <span data-i18n="excl.invert">Invertir</span>
+              </button>
+              <button id="vport-tool-clear" type="button" class="vport-tool-btn danger" data-i18n-title="ui.clearAll" title="Borrar todo">
+                <span>🗑️</span> <span data-i18n="ui.clearAll">Borrar</span>
+              </button>
+            </div>
+            <div class="viewport-mask-banner" id="viewport-mask-banner">
+              <span data-i18n="excl.activeBanner">Modo activo: haz clic o arrastra para marcar zonas sin textura · Mayús para borrar</span>
+            </div>
+            <button id="vport-open-panel-btn" type="button" class="vport-open-panel-btn" data-i18n="excl.openFullSettings">
+              ⚙️ Más opciones de máscara (Corte Z, ángulos…)
+            </button>
+          </div>
         </div>
+
+      </div>
       <!-- Smart Fit Toast Notification -->
       <div id="smart-fit-toast" class="smart-fit-toast hidden" role="status" aria-live="polite">
         <div class="smart-fit-toast-header">
@@ -198,6 +235,17 @@
           </div>
         </div>
         <div id="smart-fit-badge" class="smart-fit-badge hidden"></div>
+      </div>
+
+      <!-- Quick Untextured Zones Card -->
+      <div class="mask-quick-card" id="mask-quick-card">
+        <button type="button" id="sidebar-mask-shortcut-btn" class="mask-quick-btn"
+          data-i18n-title="ui.viewportMaskTitle" title="Herramientas para elegir zonas sin textura">
+          <span class="mask-quick-icon">🖌️</span>
+          <span data-i18n="ui.maskQuickMain">Elegir zonas sin textura</span>
+          <span id="mask-quick-count" class="mask-quick-badge">0</span>
+        </button>
+        <p class="mask-quick-desc" data-i18n="ui.maskQuickDesc">Excluye bases, tapas o áreas específicas con pincel, relleno o corte de altura Z.</p>
       </div>
 
       <!-- Load STL -->
@@ -414,20 +462,40 @@
       </section>
 
       <!-- Masking -->
-      <section class="panel-section">
-        <h2 data-i18n="sections.masking">Enmascaramiento</h2>
+      <section class="panel-section" id="masking-panel-section">
+        <h2 data-i18n="sections.masking">Zonas sin textura (Máscara / Exclusión)</h2>
 
-        <!-- By Angle -->
-        <h3 class="panel-subsection-heading" data-i18n="sections.maskAngles" data-i18n-title="tooltips.maskAngles" title="0° = no masking. Surfaces within this angle of horizontal will not be textured.">Por ángulo ⓘ</h3>
-        <div class="form-row slider-row">
-          <label for="bottom-angle-limit" data-i18n="labels.bottomFaces" data-i18n-title="tooltips.bottomFaces" title="Suppress texture on downward-facing surfaces within this angle of horizontal">Caras inferiores</label>
-          <input type="range" id="bottom-angle-limit" min="0" max="90" step="1" value="5" />
-          <input type="number" class="val" id="bottom-angle-limit-val" value="5" min="0" max="90" step="1" />
+        <!-- Quick actions: Invert & Flat Caps -->
+        <div class="excl-quick-actions">
+          <button id="excl-flat-caps-btn" class="excl-action-btn" type="button"
+            data-i18n-title="excl.flatCapsTitle" title="Excluir automáticamente la base inferior y la tapa superior planas">
+            <span class="excl-action-icon">⚪</span> <span data-i18n="excl.flatCaps">Excluir tapas planas</span>
+          </button>
+          <button id="excl-invert-btn" class="excl-action-btn" type="button"
+            data-i18n-title="excl.invertTitle" title="Invertir zonas: intercambia zonas con textura y sin textura">
+            <span class="excl-action-icon">⇄</span> <span data-i18n="excl.invert">Invertir zonas</span>
+          </button>
         </div>
-        <div class="form-row slider-row">
-          <label for="top-angle-limit" data-i18n="labels.topFaces" data-i18n-title="tooltips.topFaces" title="Suppress texture on upward-facing surfaces within this angle of horizontal">Caras superiores</label>
-          <input type="range" id="top-angle-limit" min="0" max="90" step="1" value="0" />
-          <input type="number" class="val" id="top-angle-limit-val" value="0" min="0" max="90" step="1" />
+
+        <!-- By Z-Height -->
+        <h3 class="panel-subsection-heading" data-i18n="excl.zHeightHeading" data-i18n-title="excl.zHeightTitle" title="Excluir zonas por altura física en milímetros (base y tapa)">Corte por altura (Z) ⓘ</h3>
+        <div class="z-height-grid">
+          <div class="form-row slider-row">
+            <label for="excl-z-bottom" data-i18n="excl.zBottom" data-i18n-title="excl.zBottomTitle" title="Excluir base inferior hasta esta altura (en mm)">Base inferior (mm)</label>
+            <input type="range" id="excl-z-bottom" min="0" max="100" step="0.5" value="0" />
+            <input type="number" class="val" id="excl-z-bottom-val" value="0" min="0" max="1000" step="0.5" />
+          </div>
+          <div class="form-row slider-row">
+            <label for="excl-z-top" data-i18n="excl.zTop" data-i18n-title="excl.zTopTitle" title="Excluir parte superior hacia abajo esta distancia (en mm)">Parte superior (mm)</label>
+            <input type="range" id="excl-z-top" min="0" max="100" step="0.5" value="0" />
+            <input type="number" class="val" id="excl-z-top-val" value="0" min="0" max="1000" step="0.5" />
+          </div>
+        </div>
+        <div class="z-quick-pills">
+          <button type="button" class="z-pill-btn" data-z-preset="bottom-5">+ Base 5mm</button>
+          <button type="button" class="z-pill-btn" data-z-preset="top-5">+ Tapa 5mm</button>
+          <button type="button" class="z-pill-btn" data-z-preset="both-5">+ Ambas 5mm</button>
+          <button type="button" id="excl-z-apply-btn" class="z-apply-btn" data-i18n="excl.zApply">Aplicar corte Z</button>
         </div>
 
         <!-- By Surface -->
@@ -509,9 +577,22 @@
 
         <!-- Footer: count + clear -->
         <div class="excl-footer">
-          <span id="excl-count" class="excl-count">0 caras enmascaradas</span>
+          <span id="excl-count" class="excl-count">0 caras sin textura</span>
           <span id="excl-shift-hint" class="excl-shift-hint" data-i18n="excl.shiftHint">Mantén Mayús para borrar</span>
           <button id="excl-clear-btn" class="excl-clear-btn" data-i18n="ui.clearAll">Borrar todo</button>
+        </div>
+
+        <!-- By Angle -->
+        <h3 class="panel-subsection-heading" data-i18n="sections.maskAngles" data-i18n-title="tooltips.maskAngles" title="0° = no masking. Surfaces within this angle of horizontal will not be textured.">Por ángulo ⓘ</h3>
+        <div class="form-row slider-row">
+          <label for="bottom-angle-limit" data-i18n="labels.bottomFaces" data-i18n-title="tooltips.bottomFaces" title="Suppress texture on downward-facing surfaces within this angle of horizontal">Caras inferiores</label>
+          <input type="range" id="bottom-angle-limit" min="0" max="90" step="1" value="5" />
+          <input type="number" class="val" id="bottom-angle-limit-val" value="5" min="0" max="90" step="1" />
+        </div>
+        <div class="form-row slider-row">
+          <label for="top-angle-limit" data-i18n="labels.topFaces" data-i18n-title="tooltips.topFaces" title="Suppress texture on upward-facing surfaces within this angle of horizontal">Caras superiores</label>
+          <input type="range" id="top-angle-limit" min="0" max="90" step="1" value="0" />
+          <input type="number" class="val" id="top-angle-limit-val" value="0" min="0" max="90" step="1" />
         </div>
 
         <!-- Boundary Falloff (applies to both angle and surface masking) -->

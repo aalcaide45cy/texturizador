@@ -2229,3 +2229,316 @@ input[type="number"].val:focus { outline: none; border-color: var(--accent); }
   color: var(--accent);
   font-weight: 600;
 }
+
+/* ── Floating Viewport Mask Toolbar ───────────────────────────────────────── */
+.viewport-mask-bar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.viewport-mask-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.viewport-mask-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.viewport-mask-btn.active {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent), 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.viewport-mask-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.viewport-mask-badge.hidden { display: none; }
+
+.viewport-mask-popover {
+  width: 290px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: vport-mask-fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.viewport-mask-popover.hidden { display: none; }
+
+@keyframes vport-mask-fade-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.viewport-mask-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.viewport-mask-popover-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.viewport-mask-popover-close {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.viewport-mask-popover-close:hover {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.viewport-mask-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.vport-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.vport-tool-btn:hover {
+  border-color: var(--accent-hover);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+}
+
+.vport-tool-btn.active {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface2));
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.vport-tool-btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface2));
+}
+
+.viewport-mask-banner {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding: 6px 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  border-left: 2px solid var(--accent);
+}
+
+.vport-open-panel-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.vport-open-panel-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* ── Quick Untextured Zones Sidebar Card ─────────────────────────────────── */
+.mask-quick-card {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, color-mix(in srgb, #ff8800 6%, var(--surface2)), var(--surface2));
+  border: 1px solid color-mix(in srgb, #ff8800 24%, var(--border));
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+
+.mask-quick-card:hover {
+  border-color: #ff8800;
+}
+
+.mask-quick-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.mask-quick-icon {
+  font-size: 14px;
+}
+
+.mask-quick-badge {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.mask-quick-badge.has-masks {
+  background: #ff8800;
+  border-color: #ff8800;
+  color: #fff;
+}
+
+.mask-quick-desc {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin: 5px 0 0 0;
+  line-height: 1.35;
+}
+
+/* ── Quick Actions & Z-Height Controls in Sidebar ────────────────────────── */
+.excl-quick-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.excl-action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.excl-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+}
+
+.z-height-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.z-quick-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.z-pill-btn {
+  padding: 3px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.z-pill-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.z-apply-btn {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface2));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.z-apply-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}

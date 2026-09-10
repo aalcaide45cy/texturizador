@@ -402,6 +402,27 @@ const exclModeIncludeBtn  = document.getElementById('excl-mode-include');
 const exclSectionHeading  = document.getElementById('excl-section-heading');
 const exclHint            = document.getElementById('excl-hint');
 
+// ── Untextured zones & Z-height DOM refs ──────────────────────────────────────
+const viewportMaskBtn        = document.getElementById('viewport-mask-toggle-btn');
+const viewportMaskBadge      = document.getElementById('viewport-mask-badge');
+const viewportMaskPopover    = document.getElementById('viewport-mask-popover');
+const viewportMaskCloseBtn   = document.getElementById('viewport-mask-close-btn');
+const vportToolBrush         = document.getElementById('vport-tool-brush');
+const vportToolFill          = document.getElementById('vport-tool-fill');
+const vportToolInvert        = document.getElementById('vport-tool-invert');
+const vportToolClear         = document.getElementById('vport-tool-clear');
+const vportOpenPanelBtn      = document.getElementById('vport-open-panel-btn');
+const sidebarMaskShortcutBtn = document.getElementById('sidebar-mask-shortcut-btn');
+const maskQuickCount         = document.getElementById('mask-quick-count');
+const exclFlatCapsBtn        = document.getElementById('excl-flat-caps-btn');
+const exclInvertBtn          = document.getElementById('excl-invert-btn');
+const exclZBottomSlider      = document.getElementById('excl-z-bottom');
+const exclZBottomVal         = document.getElementById('excl-z-bottom-val');
+const exclZTopSlider         = document.getElementById('excl-z-top');
+const exclZTopVal            = document.getElementById('excl-z-top-val');
+const exclZApplyBtn          = document.getElementById('excl-z-apply-btn');
+const maskingPanelSection    = document.getElementById('masking-panel-section');
+
 // ── Precision masking DOM refs ────────────────────────────────────────────────
 const precisionMaskingRow     = document.getElementById('precision-masking-row');
 const precisionMaskingToggle  = document.getElementById('precision-masking-toggle');
@@ -1740,7 +1761,105 @@ function wireEvents() {
     excludedFaces = new Set();
     precisionExcludedFaces = new Set();
     refreshExclusionOverlay();
+    _commitUndoCapture();
   });
+
+  if (exclInvertBtn) exclInvertBtn.addEventListener('click', invertExclusion);
+  if (exclFlatCapsBtn) exclFlatCapsBtn.addEventListener('click', excludeFlatCaps);
+
+  if (exclZBottomSlider && exclZBottomVal) {
+    exclZBottomSlider.addEventListener('input', () => {
+      exclZBottomVal.value = exclZBottomSlider.value;
+    });
+    exclZBottomVal.addEventListener('change', () => {
+      let v = parseFloat(exclZBottomVal.value) || 0;
+      if (currentBounds) v = Math.min(Math.ceil(currentBounds.size.z), Math.max(0, v));
+      exclZBottomSlider.value = v;
+      exclZBottomVal.value = v;
+    });
+    addFineWheelSupport(exclZBottomVal, (v) => {
+      if (currentBounds) v = Math.min(Math.ceil(currentBounds.size.z), Math.max(0, v));
+      exclZBottomSlider.value = v;
+      exclZBottomVal.value = v;
+    });
+  }
+
+  if (exclZTopSlider && exclZTopVal) {
+    exclZTopSlider.addEventListener('input', () => {
+      exclZTopVal.value = exclZTopSlider.value;
+    });
+    exclZTopVal.addEventListener('change', () => {
+      let v = parseFloat(exclZTopVal.value) || 0;
+      if (currentBounds) v = Math.min(Math.ceil(currentBounds.size.z), Math.max(0, v));
+      exclZTopSlider.value = v;
+      exclZTopVal.value = v;
+    });
+    addFineWheelSupport(exclZTopVal, (v) => {
+      if (currentBounds) v = Math.min(Math.ceil(currentBounds.size.z), Math.max(0, v));
+      exclZTopSlider.value = v;
+      exclZTopVal.value = v;
+    });
+  }
+
+  if (exclZApplyBtn) {
+    exclZApplyBtn.addEventListener('click', () => {
+      const bCut = parseFloat(exclZBottomVal?.value) || 0;
+      const tCut = parseFloat(exclZTopVal?.value) || 0;
+      applyZHeightExclusion(bCut, tCut);
+    });
+  }
+
+  document.querySelectorAll('.z-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = btn.getAttribute('data-z-preset');
+      if (preset === 'bottom-5') {
+        if (exclZBottomSlider) exclZBottomSlider.value = '5';
+        if (exclZBottomVal) exclZBottomVal.value = '5';
+        applyZHeightExclusion(5, 0);
+      } else if (preset === 'top-5') {
+        if (exclZTopSlider) exclZTopSlider.value = '5';
+        if (exclZTopVal) exclZTopVal.value = '5';
+        applyZHeightExclusion(0, 5);
+      } else if (preset === 'both-5') {
+        if (exclZBottomSlider) exclZBottomSlider.value = '5';
+        if (exclZBottomVal) exclZBottomVal.value = '5';
+        if (exclZTopSlider) exclZTopSlider.value = '5';
+        if (exclZTopVal) exclZTopVal.value = '5';
+        applyZHeightExclusion(5, 5);
+      }
+    });
+  });
+
+  if (viewportMaskBtn) {
+    viewportMaskBtn.addEventListener('click', toggleViewportMask);
+  }
+  if (viewportMaskCloseBtn) {
+    viewportMaskCloseBtn.addEventListener('click', () => {
+      viewportMaskPopover?.classList.add('hidden');
+      if (exclusionTool) setExclusionTool(null);
+    });
+  }
+  if (vportToolBrush) {
+    vportToolBrush.addEventListener('click', () => setExclusionTool('brush'));
+  }
+  if (vportToolFill) {
+    vportToolFill.addEventListener('click', () => setExclusionTool('bucket'));
+  }
+  if (vportToolInvert) {
+    vportToolInvert.addEventListener('click', invertExclusion);
+  }
+  if (vportToolClear) {
+    vportToolClear.addEventListener('click', () => exclClearBtn?.click());
+  }
+  if (vportOpenPanelBtn) {
+    vportOpenPanelBtn.addEventListener('click', scrollToMaskingPanel);
+  }
+  if (sidebarMaskShortcutBtn) {
+    sidebarMaskShortcutBtn.addEventListener('click', () => {
+      scrollToMaskingPanel();
+      if (!exclusionTool) setExclusionTool('brush');
+    });
+  }
 
   // Clicking a mask-mode button pre-selects the fill tool so painting can
   // start without an extra click (an already-active brush is kept). Only the
@@ -1952,6 +2071,12 @@ function setExclusionTool(tool) {
   }
   exclBrushBtn.classList.toggle('active', exclusionTool === 'brush');
   exclBucketBtn.classList.toggle('active', exclusionTool === 'bucket');
+  if (vportToolBrush) vportToolBrush.classList.toggle('active', exclusionTool === 'brush');
+  if (vportToolFill)  vportToolFill.classList.toggle('active', exclusionTool === 'bucket');
+  if (viewportMaskBtn) viewportMaskBtn.classList.toggle('active', exclusionTool !== null);
+  if (exclusionTool !== null && viewportMaskPopover) {
+    viewportMaskPopover.classList.remove('hidden');
+  }
   // Show brush-type row only while brush is active
   exclBrushTypeRow.classList.toggle('hidden', exclusionTool !== 'brush');
   // Show radius row only while brush + radius mode is active
@@ -1983,6 +2108,149 @@ function setExclusionTool(tool) {
       updateFaceMask(activeGeo);
     }
   }
+}
+
+function toggleViewportMask() {
+  if (!viewportMaskPopover) return;
+  const isHidden = viewportMaskPopover.classList.contains('hidden');
+  if (isHidden) {
+    viewportMaskPopover.classList.remove('hidden');
+    if (!exclusionTool) setExclusionTool('brush');
+  } else {
+    viewportMaskPopover.classList.add('hidden');
+    if (exclusionTool) setExclusionTool(null);
+  }
+}
+
+function scrollToMaskingPanel() {
+  if (!maskingPanelSection) return;
+  maskingPanelSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  maskingPanelSection.style.transition = 'box-shadow 0.3s ease';
+  maskingPanelSection.style.boxShadow = '0 0 0 2px var(--accent)';
+  setTimeout(() => {
+    if (maskingPanelSection) maskingPanelSection.style.boxShadow = '';
+  }, 1200);
+}
+
+function updateZHeightBounds() {
+  if (!currentBounds) return;
+  const height = Math.ceil(currentBounds.size.z * 10) / 10;
+  if (exclZBottomSlider) {
+    exclZBottomSlider.max = height;
+    exclZBottomSlider.step = height > 20 ? '0.5' : '0.1';
+  }
+  if (exclZBottomVal) {
+    exclZBottomVal.max = height;
+    exclZBottomVal.step = height > 20 ? '0.5' : '0.1';
+  }
+  if (exclZTopSlider) {
+    exclZTopSlider.max = height;
+    exclZTopSlider.step = height > 20 ? '0.5' : '0.1';
+  }
+  if (exclZTopVal) {
+    exclZTopVal.max = height;
+    exclZTopVal.step = height > 20 ? '0.5' : '0.1';
+  }
+}
+
+function applyZHeightExclusion(bottomCut, topCut) {
+  if (!currentGeometry || !currentBounds) return;
+  const posAttr = currentGeometry.attributes.position;
+  const triCount = posAttr.count / 3;
+  const zMin = currentBounds.min.z;
+  const height = currentBounds.size.z;
+
+  const bCut = Math.max(0, Number(bottomCut) || 0);
+  const tCut = Math.max(0, Number(topCut) || 0);
+  if (bCut <= 0 && tCut <= 0) return;
+
+  for (let t = 0; t < triCount; t++) {
+    const i = t * 3;
+    const cz = (posAttr.getZ(i) + posAttr.getZ(i + 1) + posAttr.getZ(i + 2)) / 3;
+    const relZ = cz - zMin; // 0 at base, height at top
+
+    if ((bCut > 0 && relZ <= bCut) || (tCut > 0 && relZ >= (height - tCut))) {
+      excludedFaces.add(t);
+    }
+  }
+
+  if (precisionMaskingEnabled && precisionParentMap) {
+    for (let i = 0; i < precisionParentMap.length; i++) {
+      if (excludedFaces.has(precisionParentMap[i])) {
+        precisionExcludedFaces.add(i);
+      }
+    }
+  }
+
+  maskModeChosen = true;
+  updateMaskModeButtons();
+  refreshExclusionOverlay();
+  _commitUndoCapture();
+}
+
+function excludeFlatCaps() {
+  if (!currentGeometry) return;
+  const posAttr = currentGeometry.attributes.position;
+  const triCount = posAttr.count / 3;
+  const vA = new THREE.Vector3();
+  const vB = new THREE.Vector3();
+  const vC = new THREE.Vector3();
+  const e1 = new THREE.Vector3();
+  const e2 = new THREE.Vector3();
+  const fn = new THREE.Vector3();
+
+  for (let t = 0; t < triCount; t++) {
+    vA.fromBufferAttribute(posAttr, t * 3);
+    vB.fromBufferAttribute(posAttr, t * 3 + 1);
+    vC.fromBufferAttribute(posAttr, t * 3 + 2);
+    e1.subVectors(vB, vA);
+    e2.subVectors(vC, vA);
+    fn.crossVectors(e1, e2).normalize();
+
+    // Horizontal faces: |fn.z| >= 0.90
+    if (Math.abs(fn.z) >= 0.90) {
+      excludedFaces.add(t);
+    }
+  }
+
+  if (precisionMaskingEnabled && precisionParentMap) {
+    for (let i = 0; i < precisionParentMap.length; i++) {
+      if (excludedFaces.has(precisionParentMap[i])) {
+        precisionExcludedFaces.add(i);
+      }
+    }
+  }
+
+  maskModeChosen = true;
+  updateMaskModeButtons();
+  refreshExclusionOverlay();
+  _commitUndoCapture();
+}
+
+function invertExclusion() {
+  if (!currentGeometry) return;
+  const triCount = currentGeometry.attributes.position.count / 3;
+  const nextSet = new Set();
+  for (let t = 0; t < triCount; t++) {
+    if (!excludedFaces.has(t)) {
+      nextSet.add(t);
+    }
+  }
+  excludedFaces = nextSet;
+
+  if (precisionMaskingEnabled && precisionParentMap) {
+    precisionExcludedFaces.clear();
+    for (let i = 0; i < precisionParentMap.length; i++) {
+      if (excludedFaces.has(precisionParentMap[i])) {
+        precisionExcludedFaces.add(i);
+      }
+    }
+  }
+
+  maskModeChosen = true;
+  updateMaskModeButtons();
+  refreshExclusionOverlay();
+  _commitUndoCapture();
 }
 
 const _ndcResult = new THREE.Vector2();
@@ -2398,6 +2666,7 @@ function handlePlaceOnFaceClick(e) {
 
   // Now reload as if this were a freshly loaded STL
   currentBounds = computeBounds(currentGeometry);
+  updateZHeightBounds();
   // Geometry rotated — cylinder axis settings tied to old XY are stale.
   settings.cylinderCenterX = null;
   settings.cylinderCenterY = null;
@@ -2617,6 +2886,7 @@ function _rotateFinalize() {
 
   // Full refresh
   currentBounds = computeBounds(currentGeometry);
+  updateZHeightBounds();
   loadGeometry(currentGeometry);
 
   // Geometry was reauthored (displacement baked in); cylinder silhouette
@@ -2668,6 +2938,15 @@ function refreshExclusionOverlay() {
   exclCount.textContent = selectionMode
     ? t(n === 1 ? 'excl.faceSelected' : 'excl.facesSelected', { n: n.toLocaleString() })
     : t(n === 1 ? 'excl.faceExcluded' : 'excl.facesExcluded', { n: n.toLocaleString() });
+
+  if (viewportMaskBadge) {
+    viewportMaskBadge.textContent = n.toLocaleString();
+    viewportMaskBadge.classList.toggle('hidden', n === 0);
+  }
+  if (maskQuickCount) {
+    maskQuickCount.textContent = n.toLocaleString();
+    maskQuickCount.classList.toggle('has-masks', n > 0);
+  }
 
   // Update the faceMask attribute on the active preview geometry so the shader
   // reflects user-painted exclusions in real time.
@@ -2924,6 +3203,7 @@ function loadDefaultCube() {
 
   currentGeometry = geo;
   currentBounds   = computeBounds(geo);
+  updateZHeightBounds();
   currentPoseRot   = new THREE.Quaternion(); // authored at the origin — nothing to restore
   currentPoseTrans = new THREE.Vector3();
   currentStlName  = 'cube_50x50x50';
@@ -3093,6 +3373,7 @@ async function handleModelFile(file, stepSettings = null) {
 
     currentGeometry = geometry;
     currentBounds   = bounds;
+    updateZHeightBounds();
     currentPoseRot   = new THREE.Quaternion();
     currentPoseTrans = originOffset ? originOffset.clone().negate() : new THREE.Vector3(); // mem = orig − centre
     currentStlName  = file.name.replace(/\.(stl|obj|3mf|step|stp)$/i, '');
