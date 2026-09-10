@@ -132,7 +132,7 @@ const settings = {
   cylinderCenterX:  null,
   cylinderCenterY:  null,
   cylinderRadius:   null,
-  cylinderCapMode:  'smooth',
+  cylinderCapMode:  'planar',
   cylinderPanelMinimized: false,
   // Regularize Mesh.  Two-step pipeline applied after the initial subdivide:
   // collapse sliver chains, then re-subdivide stretched edges back to a
@@ -338,6 +338,8 @@ const smartFitBadge      = document.getElementById('smart-fit-badge');
 const smartFitToast      = document.getElementById('smart-fit-toast');
 const smartFitToastBody  = document.getElementById('smart-fit-toast-body');
 const smartFitToastClose = document.getElementById('smart-fit-toast-close');
+const smartFitPills      = document.querySelectorAll('.smart-fit-pill');
+let _smartFitCapPref     = 'planar';
 const maxTriVal    = document.getElementById('max-triangles-val');
 
 const bottomAngleLimitSlider = document.getElementById('bottom-angle-limit');
@@ -902,6 +904,7 @@ function updateCylinderUIVisibility() {
   // model loaded — they get the empty placeholder until they load one, which
   // makes it clear that the gizmo will appear there.
   cylinderPanel.classList.toggle('hidden', !isCyl);
+  _syncSmartFitCapPills(settings.cylinderCapMode);
   if (isCyl) {
     if (currentGeometry) _buildCylinderSilhouette();
     _scheduleCylinderPanelRedraw();
@@ -1423,6 +1426,7 @@ function wireEvents() {
       if (capAngleRow) {
         capAngleRow.style.display = (settings.mappingMode === 3 && settings.cylinderCapMode !== 'radial') ? '' : 'none';
       }
+      _syncSmartFitCapPills(cylinderCapMode.value);
       updatePreview();
       _autoSaveSettings();
     });
@@ -3475,6 +3479,13 @@ function applySmartResolution() {
   smartResInfo.classList.remove('hidden');
 }
 
+function _syncSmartFitCapPills(mode) {
+  _smartFitCapPref = mode || 'planar';
+  smartFitPills.forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.capMode === _smartFitCapPref);
+  });
+}
+
 function showSmartFitToast(items) {
   if (!smartFitToast || !smartFitToastBody) return;
   smartFitToastBody.innerHTML = items.map(item => `<div class="smart-fit-toast-item"><span class="smart-fit-item-icon">✓</span> ${item}</div>`).join('');
@@ -3505,6 +3516,7 @@ async function executeSmartFit() {
     settings,
     texture: effective,
     faceNormals: triangleFaceNormals,
+    capModePref: _smartFitCapPref,
   });
 
   if (!fit || !fit.success) return;
@@ -3519,6 +3531,7 @@ async function executeSmartFit() {
   // Cylinder mode specific updates
   if (settings.mappingMode === 3) {
     if (cylinderCapMode) cylinderCapMode.value = settings.cylinderCapMode;
+    _syncSmartFitCapPills(settings.cylinderCapMode);
     if (cylinderSnapToggle) cylinderSnapToggle.checked = settings.snapSeamlessWrap;
     if (capAngleRow) {
       capAngleRow.style.display = (settings.cylinderCapMode !== 'radial') ? '' : 'none';
@@ -3572,7 +3585,13 @@ async function executeSmartFit() {
     const diam = (fit.shapeDetails.radius * 2).toFixed(1);
     items.push(t('smartFit.shapeCylinder', { diam }));
     items.push(t('smartFit.projCylinder', { repeats: fit.repeats }));
-    items.push(t('smartFit.capSmooth'));
+    if (fit.capTreatment === 'planar') {
+      items.push(t('smartFit.capPlanar'));
+    } else if (fit.capTreatment === 'radial') {
+      items.push(t('smartFit.capRadial'));
+    } else {
+      items.push(t('smartFit.capSmooth'));
+    }
   } else if (fit.shapeType === 'box') {
     items.push(t('smartFit.shapeBox'));
     items.push(t('smartFit.projTriplanar'));
@@ -3596,7 +3615,8 @@ async function executeSmartFit() {
   if (smartFitBadge) {
     let badgeText = '';
     if (fit.shapeType === 'cylinder') {
-      badgeText = `Cilíndrico · ${fit.repeats} reps · ${fit.scaleMm} mm`;
+      const capTag = fit.capTreatment === 'planar' ? ' · Tapa 🎯' : fit.capTreatment === 'smooth' ? ' · Tapa ⚪' : '';
+      badgeText = `Cilíndrico · ${fit.repeats} reps · ${fit.scaleMm} mm${capTag}`;
     } else if (fit.shapeType === 'box') {
       badgeText = `Triplanar · ${fit.scaleMm} mm · ${fit.textureHeight} mm`;
     } else if (fit.shapeType === 'planar') {
@@ -3623,6 +3643,24 @@ function updateSmartResBtnState() {
   }
   updateSmartFitBtnState();
 }
+
+smartFitPills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    const mode = pill.dataset.capMode;
+    _smartFitCapPref = mode;
+    settings.cylinderCapMode = mode;
+    _syncSmartFitCapPills(mode);
+    if (cylinderCapMode) cylinderCapMode.value = mode;
+    if (capAngleRow) {
+      capAngleRow.style.display = (settings.mappingMode === 3 && mode !== 'radial') ? '' : 'none';
+    }
+    if (settings.mappingMode === 3 && currentGeometry) {
+      updatePreview();
+      requestRender();
+      _autoSaveSettings();
+    }
+  });
+});
 
 if (smartResBtn) smartResBtn.addEventListener('click', applySmartResolution);
 if (smartFitAllBtn) smartFitAllBtn.addEventListener('click', executeSmartFit);
@@ -5671,7 +5709,7 @@ const DEFAULT_SETTINGS_SNAPSHOT = Object.freeze({
   refineLength: 1, maxTriangles: 750000,
   snapSeamlessWrap: true,
   cylinderCenterX: null, cylinderCenterY: null, cylinderRadius: null,
-  cylinderCapMode: 'smooth',
+  cylinderCapMode: 'planar',
   cylinderPanelMinimized: false,
   activeMapName: DEFAULT_PRESET_NAME,
 });

@@ -213,7 +213,7 @@ export function analyzeGeometryShape(geometry, bounds, faceNormals) {
  * @param {Float32Array|null} ctx.faceNormals
  * @returns {Object} Result summary describing what was adjusted
  */
-export function applySmartFit({ geometry, bounds, settings, texture, faceNormals }) {
+export function applySmartFit({ geometry, bounds, settings, texture, faceNormals, capModePref }) {
   if (!geometry || !bounds) {
     return { success: false, reason: 'no_geometry' };
   }
@@ -230,7 +230,7 @@ export function applySmartFit({ geometry, bounds, settings, texture, faceNormals
   let scaleMm = 25;
   let repeats = 1;
   let circumference = 0;
-  let capTreatment = 'smooth';
+  let capTreatment = capModePref || settings.cylinderCapMode || 'planar';
 
   if (shape.type === SHAPE_CYLINDER) {
     mappingMode = 3; // Cylindrical
@@ -251,12 +251,11 @@ export function applySmartFit({ geometry, bounds, settings, texture, faceNormals
     settings.cylinderCenterY    = shape.cy;
     settings.cylinderRadius     = r;
     settings.snapSeamlessWrap   = true;
-    settings.cylinderCapMode    = 'smooth';
+    settings.cylinderCapMode    = capTreatment;
     settings.capAngle           = 25;
     settings.lockScale          = true;
     settings.scaleU             = scaleMm;
     settings.scaleV             = scaleMm;
-    capTreatment                = 'smooth';
 
   } else if (shape.type === SHAPE_PLANAR) {
     mappingMode = 0; // Planar XY

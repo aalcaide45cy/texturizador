@@ -189,6 +189,14 @@
           <span data-i18n="ui.smartFitMain">Ajuste Perfecto Automático</span>
         </button>
         <p class="smart-fit-desc" data-i18n="ui.smartFitDesc">Analiza la forma 3D, elimina costuras y calibra resolución y profundidad para máximo detalle.</p>
+        <div class="smart-fit-options" id="smart-fit-cap-options">
+          <span class="smart-fit-options-title" data-i18n="ui.smartFitCapLabel">Tapa superior (cilindros):</span>
+          <div class="smart-fit-pills" role="radiogroup" aria-label="Tratamiento de tapa superior">
+            <button type="button" class="smart-fit-pill active" data-cap-mode="planar" data-i18n="ui.smartFitCapPlanar" data-i18n-title="ui.smartFitCapPlanarTitle" title="Texturar tapa superior de forma continua y centrada">🎯 Texturada</button>
+            <button type="button" class="smart-fit-pill" data-cap-mode="smooth" data-i18n="ui.smartFitCapSmooth" data-i18n-title="ui.smartFitCapSmoothTitle" title="Dejar tapa superior lisa y plana">⚪ Lisa</button>
+            <button type="button" class="smart-fit-pill" data-cap-mode="radial" data-i18n="ui.smartFitCapRadial" data-i18n-title="ui.smartFitCapRadialTitle" title="Textura radial continua">🌀 Radial</button>
+          </div>
+        </div>
         <div id="smart-fit-badge" class="smart-fit-badge hidden"></div>
       </div>
 
@@ -293,8 +301,8 @@
         <div class="form-row" id="cylinder-cap-row" style="display:none">
           <label for="cylinder-cap-mode" data-i18n="labels.cylinderCapMode" data-i18n-title="tooltips.cylinderCapMode" title="Controla cómo se proyecta la textura en las caras planas superior e inferior del cilindro.">Tratamiento de tapas ⓘ</label>
           <select id="cylinder-cap-mode">
-            <option value="smooth" selected data-i18n-opt="cylinderCap.smooth">Tapa lisa (sin relieve)</option>
-            <option value="planar" data-i18n-opt="cylinderCap.planar">Tapa plana (proyectada)</option>
+            <option value="planar" selected data-i18n-opt="cylinderCap.planar">Tapa plana (proyectada)</option>
+            <option value="smooth" data-i18n-opt="cylinderCap.smooth">Tapa lisa (sin relieve)</option>
             <option value="radial" data-i18n-opt="cylinderCap.radial">Radial continua</option>
           </select>
         </div>
