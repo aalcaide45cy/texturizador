@@ -205,6 +205,7 @@ const sharedGLSL = /* glsl */`
       vec3 wts = cubicBlendWeights(bN);
       return hYZ * wts.x + hXZ * wts.y + hXY * wts.z;
     }
+    return 0.0;
   }
 `;
 

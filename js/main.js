@@ -1289,7 +1289,17 @@ function wireEvents() {
     handleModelFile(file);
   });
 
-  // Drag & drop on the viewport section
+  // Drag & drop on the viewport section and window
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = [...(e.dataTransfer?.files || [])];
+    const bmFile = files.find(f => /\.(texturizador)$/i.test(f.name));
+    if (bmFile) { importProject(bmFile).catch(err => alert(t('alerts.importFailed', { msg: err.message }))); return; }
+    const file = files.find(f => /\.(stl|obj|3mf|step|stp)$/i.test(f.name));
+    if (file) handleModelFile(file);
+  });
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('drag-over');
@@ -1299,7 +1309,7 @@ function wireEvents() {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
     const files = [...e.dataTransfer.files];
-    const bmFile = files.find(f => /\.(texturizador|texturizador)$/i.test(f.name));
+    const bmFile = files.find(f => /\.(texturizador)$/i.test(f.name));
     if (bmFile) { importProject(bmFile).catch(err => alert(t('alerts.importFailed', { msg: err.message }))); return; }
     const file = files.find(f => /\.(stl|obj|3mf|step|stp)$/i.test(f.name));
     if (file) handleModelFile(file);
