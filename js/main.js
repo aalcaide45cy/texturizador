@@ -1591,10 +1591,6 @@ function wireEvents() {
     clearDiagHighlight();
   });
 
-  // ── Support banner dismiss ──
-  const ctaDismissBtn = document.getElementById('store-cta-dismiss'); if (ctaDismissBtn) ctaDismissBtn.addEventListener('click', () => { const w = document.getElementById('store-cta-wrapper'); if (w) w.classList.add('store-cta-hidden'); });
-  });
-
   // ── Export ──
   const startExport = (format) => {
     handleExport(format);
