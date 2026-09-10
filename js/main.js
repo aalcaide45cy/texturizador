@@ -11,6 +11,7 @@ import { loadModelFile, computeBounds, getTriangleCount }  from './stlLoader.js'
 import { estimateStep } from './stepLoader.js';
 import { resolveStepSettings } from './stepConvert.js';
 import { computeSmartResolution } from './smartResolution.js';
+import { applySmartFit } from './smartFit.js';
 import { loadAllThumbnails, loadFullPreset, loadCustomTexture, IMAGE_PRESETS }  from './presetTextures.js';
 import { createPreviewMaterial, updateMaterial } from './previewMaterial.js';
 import { subdivide }          from './subdivision.js';
@@ -331,6 +332,12 @@ const refineLenVal = document.getElementById('refine-length-val');
 const resolutionWarning = document.getElementById('resolution-warning');
 const smartResBtn  = document.getElementById('smart-res-btn');
 const smartResInfo = document.getElementById('smart-res-info');
+const smartFitAllBtn     = document.getElementById('smart-fit-all-btn');
+const smartFitSidebarBtn = document.getElementById('smart-fit-sidebar-btn');
+const smartFitBadge      = document.getElementById('smart-fit-badge');
+const smartFitToast      = document.getElementById('smart-fit-toast');
+const smartFitToastBody  = document.getElementById('smart-fit-toast-body');
+const smartFitToastClose = document.getElementById('smart-fit-toast-close');
 const maxTriVal    = document.getElementById('max-triangles-val');
 
 const bottomAngleLimitSlider = document.getElementById('bottom-angle-limit');
@@ -3468,12 +3475,164 @@ function applySmartResolution() {
   smartResInfo.classList.remove('hidden');
 }
 
+function showSmartFitToast(items) {
+  if (!smartFitToast || !smartFitToastBody) return;
+  smartFitToastBody.innerHTML = items.map(item => `<div class="smart-fit-toast-item"><span class="smart-fit-item-icon">✓</span> ${item}</div>`).join('');
+  smartFitToast.classList.remove('hidden');
+  if (smartFitToast._timer) clearTimeout(smartFitToast._timer);
+  smartFitToast._timer = setTimeout(() => {
+    smartFitToast.classList.add('hidden');
+  }, 7000);
+}
+
+async function executeSmartFit() {
+  if (!currentGeometry || !currentBounds) {
+    alert(t('smartFit.noModel') || 'Carga un modelo 3D primero para aplicar el Ajuste Perfecto');
+    return;
+  }
+
+  // If no texture active yet, activate first preset automatically
+  if (!activeMapEntry) {
+    if (typeof _presetSwatches !== 'undefined' && _presetSwatches[0] && PRESETS[0]) {
+      await selectPreset(0, _presetSwatches[0], false);
+    }
+  }
+
+  const effective = getEffectiveMapEntry() || activeMapEntry;
+  const fit = applySmartFit({
+    geometry: currentGeometry,
+    bounds: currentBounds,
+    settings,
+    texture: effective,
+    faceNormals: triangleFaceNormals,
+  });
+
+  if (!fit || !fit.success) return;
+
+  // Sync UI controls with updated settings
+  mappingSelect.value = String(settings.mappingMode);
+  updateCylinderUIVisibility();
+
+  // Apply scale
+  _applyScaleU(settings.scaleU);
+
+  // Cylinder mode specific updates
+  if (settings.mappingMode === 3) {
+    if (cylinderCapMode) cylinderCapMode.value = settings.cylinderCapMode;
+    if (cylinderSnapToggle) cylinderSnapToggle.checked = settings.snapSeamlessWrap;
+    if (capAngleRow) {
+      capAngleRow.style.display = (settings.cylinderCapMode !== 'radial') ? '' : 'none';
+    }
+    if (capAngleSlider) {
+      capAngleSlider.value = settings.capAngle;
+      if (capAngleVal) capAngleVal.value = settings.capAngle;
+    }
+    _scheduleCylinderPanelRedraw();
+  }
+
+  // Triplanar mode specific updates
+  if (settings.mappingMode === 5) {
+    if (seamBlendSlider) {
+      seamBlendSlider.value = settings.mappingBlend;
+      if (seamBlendVal) seamBlendVal.value = settings.mappingBlend;
+    }
+    if (seamBandWidthSlider) {
+      seamBandWidthSlider.value = settings.seamBandWidth;
+      if (seamBandWidthVal) seamBandWidthVal.value = settings.seamBandWidth;
+    }
+  }
+
+  // Depth / Amplitude
+  amplitudeSlider.value = settings.amplitude;
+  amplitudeVal.value    = settings.amplitude.toFixed(2);
+  checkAmplitudeWarning();
+
+  // Resolution & Triangles
+  refineLenSlider.value = settings.refineLength;
+  refineLenVal.value    = settings.refineLength;
+  checkResolutionWarning();
+  maxTriSlider.value    = settings.maxTriangles;
+  maxTriSlider.dispatchEvent(new Event('input', { bubbles: true }));
+
+  // Printing base protection
+  if (smoothBottomChk) smoothBottomChk.checked = settings.smoothBottom;
+  if (bottomAngleLimitSlider) {
+    bottomAngleLimitSlider.value = settings.bottomAngleLimit;
+    if (bottomAngleLimitVal) bottomAngleLimitVal.value = settings.bottomAngleLimit;
+  }
+
+  // Update 3D preview and request render
+  updatePreview();
+  requestRender();
+  _autoSaveSettings();
+
+  // Build feedback toast items
+  const items = [];
+  if (fit.shapeType === 'cylinder') {
+    const diam = (fit.shapeDetails.radius * 2).toFixed(1);
+    items.push(t('smartFit.shapeCylinder', { diam }));
+    items.push(t('smartFit.projCylinder', { repeats: fit.repeats }));
+    items.push(t('smartFit.capSmooth'));
+  } else if (fit.shapeType === 'box') {
+    items.push(t('smartFit.shapeBox'));
+    items.push(t('smartFit.projTriplanar'));
+  } else if (fit.shapeType === 'planar') {
+    items.push(t('smartFit.shapePlanar'));
+    items.push(t('smartFit.projPlanar'));
+  } else if (fit.shapeType === 'sphere') {
+    const diam = (fit.shapeDetails.radius * 2).toFixed(1);
+    items.push(t('smartFit.shapeSphere', { diam }));
+    items.push(t('smartFit.projSpherical', { repeats: fit.repeats }));
+  } else {
+    items.push(t('smartFit.shapeOrganic'));
+    items.push(t('smartFit.projTriplanar'));
+  }
+  items.push(t('smartFit.depth', { depth: fit.textureHeight.toFixed(2) }));
+  items.push(t('smartFit.detail', { edge: fit.refineLength.toFixed(2), tris: formatM(fit.maxTriangles) }));
+
+  showSmartFitToast(items);
+
+  // Show badge in sidebar
+  if (smartFitBadge) {
+    let badgeText = '';
+    if (fit.shapeType === 'cylinder') {
+      badgeText = `Cilíndrico · ${fit.repeats} reps · ${fit.scaleMm} mm`;
+    } else if (fit.shapeType === 'box') {
+      badgeText = `Triplanar · ${fit.scaleMm} mm · ${fit.textureHeight} mm`;
+    } else if (fit.shapeType === 'planar') {
+      badgeText = `Planar · ${fit.scaleMm} mm · ${fit.textureHeight} mm`;
+    } else if (fit.shapeType === 'sphere') {
+      badgeText = `Esférico · ${fit.repeats} reps · ${fit.scaleMm} mm`;
+    } else {
+      badgeText = `Triplanar · ${fit.scaleMm} mm · ${fit.textureHeight} mm`;
+    }
+    smartFitBadge.textContent = badgeText;
+    smartFitBadge.classList.remove('hidden');
+  }
+}
+
+function updateSmartFitBtnState() {
+  const canFit = !!currentGeometry;
+  if (smartFitAllBtn) smartFitAllBtn.disabled = !canFit;
+  if (smartFitSidebarBtn) smartFitSidebarBtn.disabled = !canFit;
+}
+
 function updateSmartResBtnState() {
-  if (!smartResBtn) return;
-  smartResBtn.disabled = !(currentGeometry && activeMapEntry);
+  if (smartResBtn) {
+    smartResBtn.disabled = !(currentGeometry && activeMapEntry);
+  }
+  updateSmartFitBtnState();
 }
 
 if (smartResBtn) smartResBtn.addEventListener('click', applySmartResolution);
+if (smartFitAllBtn) smartFitAllBtn.addEventListener('click', executeSmartFit);
+if (smartFitSidebarBtn) smartFitSidebarBtn.addEventListener('click', executeSmartFit);
+if (smartFitToastClose) {
+  smartFitToastClose.addEventListener('click', () => {
+    smartFitToast?.classList.add('hidden');
+  });
+}
+updateSmartFitBtnState();
 
 /**
  * Set (or update) the `faceMask` vertex attribute on a geometry.

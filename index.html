@@ -57,6 +57,10 @@
         <button id="redo-btn" class="icon-btn" data-i18n-title="header.redo" title="Rehacer (Ctrl+Mayús+Z)" disabled>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg>
         </button>
+        <button id="smart-fit-all-btn" type="button" class="smart-fit-hdr-btn" data-i18n-title="ui.smartFitTitle" title="Ajuste Inteligente: analiza la forma 3D y calibra textura sin costuras, profundidad y detalle">
+          <span class="smart-fit-sparkle">✨</span>
+          <span data-i18n="ui.smartFit">Ajuste Inteligente</span>
+        </button>
         <span class="project-io-gap" aria-hidden="true"></span>
         <button id="reset-settings-btn" class="icon-btn" data-i18n-title="header.resetSettings" title="Restablecer ajustes predeterminados">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg>
@@ -152,6 +156,14 @@
           </div>
         </div>
         </div>
+      <!-- Smart Fit Toast Notification -->
+      <div id="smart-fit-toast" class="smart-fit-toast hidden" role="status" aria-live="polite">
+        <div class="smart-fit-toast-header">
+          <span class="smart-fit-toast-title" data-i18n="ui.smartFitToastTitle">✨ Ajuste Perfecto Aplicado</span>
+          <button id="smart-fit-toast-close" type="button" class="smart-fit-toast-close" aria-label="Cerrar">×</button>
+        </div>
+        <div id="smart-fit-toast-body" class="smart-fit-toast-body"></div>
+      </div>
       <div id="viewport-footer">
         <span id="mesh-info" class="mesh-info"></span>
         <label class="wireframe-toggle">
@@ -169,6 +181,16 @@
 
     <!-- ─── Settings Panel ───────────────────────────────────────── -->
     <aside id="settings-panel">
+
+      <!-- Smart Fit Card -->
+      <div class="smart-fit-card" id="smart-fit-card">
+        <button type="button" id="smart-fit-sidebar-btn" class="smart-fit-main-btn" data-i18n-title="ui.smartFitTitle" title="Ajuste Perfecto Inteligente">
+          <span class="smart-fit-sparkle">✨</span>
+          <span data-i18n="ui.smartFitMain">Ajuste Perfecto Automático</span>
+        </button>
+        <p class="smart-fit-desc" data-i18n="ui.smartFitDesc">Analiza la forma 3D, elimina costuras y calibra resolución y profundidad para máximo detalle.</p>
+        <div id="smart-fit-badge" class="smart-fit-badge hidden"></div>
+      </div>
 
       <!-- Load STL -->
       <section class="panel-section">
