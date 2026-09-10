@@ -4,25 +4,13 @@
 // Only display names live here; full strings are lazy-loaded per language.
 
 export const TRANSLATIONS = {
-  en: { 'lang.name': 'English' },
-  de: { 'lang.name': 'Deutsch' },
-  da: { 'lang.name': 'Dansk' },
-  it: { 'lang.name': 'Italiano' },
   es: { 'lang.name': 'Español' },
-  pt: { 'lang.name': 'Português' },
-  fr: { 'lang.name': 'Français' },
-  tr: { 'lang.name': 'Türkçe' },
-  ja: { 'lang.name': '日本語' },
-  ko: { 'lang.name': '한국어' },
-  uk: { 'lang.name': 'Українська' },
-  ru: { 'lang.name': 'Русский' },
-  zh: { 'lang.name': '简体中文' },
-  pl: { 'lang.name': 'Polish' },
+  en: { 'lang.name': 'English' },
 };
 
 // ── Module state ──────────────────────────────────────────────────────────────
 
-let _currentLang = 'en';
+let _currentLang = 'es';
 const _cache = {};
 
 /**
@@ -49,8 +37,8 @@ async function _loadLang(lang) {
 // ── Core API ──────────────────────────────────────────────────────────────────
 
 function _interpolate(key, params, escape) {
-  const strings  = _cache[_currentLang] ?? _cache.en ?? {};
-  const fallback = _cache.en ?? {};
+  const strings  = _cache[_currentLang] ?? _cache.es ?? _cache.en ?? {};
+  const fallback = _cache.es ?? _cache.en ?? {};
   let str = strings[key] ?? fallback[key] ?? key;
 
   for (const [k, v] of Object.entries(params)) {
@@ -91,11 +79,8 @@ export async function setLang(lang) {
     return false;
   }
 
-  const [, langOk] = await Promise.all([_loadLang('en'), _loadLang(lang)]);
-
-  // If the requested lang failed, stay on current language rather than
-  // switching to a blank/partial UI.
-  if (!langOk) {
+  const ok = await _loadLang(lang);
+  if (!ok) {
     return false;
   }
 
@@ -147,42 +132,22 @@ export function applyTranslations() {
  * of text. The caller should surface a visible warning in this case.
  */
 export async function initLang() {
-  const saved   = localStorage.getItem('texturizador-lang');
-  const browser = navigator.language.split('-')[0];
+  const saved = localStorage.getItem('texturizador-lang');
 
   if (saved && TRANSLATIONS[saved]) {
     _currentLang = saved;
-  } else if (TRANSLATIONS[browser]) {
-    _currentLang = browser;
   } else {
-    _currentLang = 'en';
+    _currentLang = 'es';
   }
 
-  // Set attributes before the async load so CSS/JS reading `lang` works immediately.
   document.documentElement.setAttribute('data-lang', _currentLang);
   document.documentElement.setAttribute('lang', _currentLang);
 
-  const [enOk] = await Promise.all([_loadLang('en'), _loadLang(_currentLang)]);
-
-  // If the selected language failed but English loaded, silently fall back.
-  if (_currentLang !== 'en' && Object.keys(_cache[_currentLang] ?? {}).length === 0) {
-    console.warn(`[i18n] Falling back to English — "${_currentLang}" failed to load`);
-    _currentLang = 'en';
-    document.documentElement.setAttribute('data-lang', 'en');
-    document.documentElement.setAttribute('lang', 'en');
-  }
-
-  // Dev-time sanity check: warn about keys present in English but missing in
-  // the active language so translators spot drift early.
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    const en  = _cache.en  ?? {};
-    const cur = _cache[_currentLang] ?? {};
-    const missing = Object.keys(en).filter(k => !(k in cur));
-    if (_currentLang !== 'en' && missing.length) {
-      console.warn(`[i18n] ${_currentLang}.js is missing ${missing.length} key(s) vs en.js:`, missing);
-    }
+  const [esOk, enOk] = await Promise.all([_loadLang('es'), _loadLang('en')]);
+  if (_currentLang !== 'es' && _currentLang !== 'en') {
+    await _loadLang(_currentLang);
   }
 
   applyTranslations();
-  return { enFailed: !enOk };
+  return { enFailed: !esOk && !enOk };
 }

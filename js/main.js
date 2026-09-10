@@ -404,24 +404,7 @@ const meshDiagRunBtn     = document.getElementById('mesh-diag-run-btn');
 const meshDiagSpinner    = document.getElementById('mesh-diag-spinner');
 const meshDiagAdvanced   = document.getElementById('mesh-diag-advanced');
 
-// ── License panel DOM refs ────────────────────────────────────────────────────
-const licenseLink    = document.getElementById('license-link');
-const licenseOverlay = document.getElementById('license-overlay');
-const licenseClose   = document.getElementById('license-close');
-const imprintLink    = document.getElementById('imprint-link');
-const imprintOverlay = document.getElementById('imprint-overlay');
-const imprintClose   = document.getElementById('imprint-close');
-
-// ── Welcome / What's New popup ───────────────────────────────────────────────
-// Bump this date whenever the "What's New" bullets in index.html change to
-// re-show the popup to all returning visitors who previously dismissed it.
-const WELCOME_LAST_UPDATED = '2026-07-23';
-const WELCOME_STORAGE_KEY  = 'texturizador-welcome-seen';
-const welcomeLink     = document.getElementById('welcome-link');
-const welcomeOverlay  = document.getElementById('welcome-overlay');
-const welcomeClose    = document.getElementById('welcome-close');
-const welcomeGotIt    = document.getElementById('welcome-got-it');
-const welcomeDontShow = document.getElementById('welcome-dont-show');
+// ── Modals: STEP dialog active ─────────────────────────────────────────────
 
 // ── Language selector DOM refs ────────────────────────────────────────────────────
 const languageSelector = document.querySelector('.lang-seg');
@@ -985,81 +968,82 @@ initViewer(canvas);
 // Apply saved theme to 3D viewport on startup
 setViewerTheme(document.documentElement.getAttribute('data-theme') === 'light');
 
-// Populate the language selector
-function populateLanguageSelector() {
-  if (!languageSelector) return;
-  languageSelector.innerHTML = '';
+function getPresetDisplayName(p) {
+  if (!p) return '';
+  return getLang() === 'en' ? (p.nameEn || p.name) : p.name;
+}
 
-  const select = document.createElement('select');
-  select.className = 'lang-dropdown';
-  select.id = 'lang-select';
-  select.name = 'lang-select';
-  select.setAttribute('aria-label', 'Select language');
+function updatePresetLabels() {
+  if (typeof _presetSwatches !== 'undefined') {
+    _presetSwatches.forEach((swatch, idx) => {
+      const p = IMAGE_PRESETS[idx];
+      if (!p) return;
+      const name = getPresetDisplayName(p);
+      swatch.title = name;
+      const label = swatch.querySelector('.preset-label');
+      if (label) label.textContent = name;
+    });
+  }
+  if (activeMapEntry && !activeMapEntry.isCustom) {
+    const p = IMAGE_PRESETS.find(pr => pr.name === activeMapEntry.name || pr.nameEn === activeMapEntry.name);
+    if (p) {
+      activeMapName.textContent = getPresetDisplayName(p);
+    }
+  }
+}
 
-  for (const langKey in TRANSLATIONS) {
-    const opt = document.createElement('option');
-    opt.value = langKey;
-    opt.className = 'lang-option';
-    opt.textContent = TRANSLATIONS[langKey]['lang.name'] || langKey.toUpperCase();
-    select.appendChild(opt);
+async function switchLanguage(lang) {
+  if (getLang() === lang) return;
+  const ok = await setLang(lang);
+  if (!ok) {
+    alert('No se pudo cambiar el idioma / Could not change language.');
+    return;
   }
 
-  select.addEventListener('change', async (e) => {
-    const ok = await setLang(e.target.value);
-    if (!ok) {
-      // Revert the dropdown to the language that is actually active
-      select.value = getLang();
-      alert('Could not load the selected language. Please check your connection and try again.');
-      return;
-    }
-
-    // Re-translate <option> elements (innerHTML won't reach these)
-    document.querySelectorAll('#mapping-mode option[data-i18n-opt]').forEach(opt => {
-      opt.textContent = t(opt.dataset.i18nOpt);
-    });
-
-    // Refresh dynamic count text to current language
-    if (currentGeometry) {
-      const triCount = getTriangleCount(currentGeometry);
-      const mb = ((currentGeometry.attributes.position.array.byteLength) / 1024 / 1024).toFixed(2);
-      const sx = currentBounds.size.x.toFixed(2);
-      const sy = currentBounds.size.y.toFixed(2);
-      const sz = currentBounds.size.z.toFixed(2);
-      _setMeshInfo(triCount, mb, sx, sy, sz);
-      refreshExclusionOverlay();
-      if (lastFastDiag) renderFastDiag(lastFastDiag);
-      if (lastAdvancedDiag) renderAdvancedDiag(lastAdvancedDiag);
-    }
-    // The cylinder panel paints its placeholder text via Canvas2D, which
-    // applyTranslations() doesn't reach — re-render so the new locale lands.
-    _scheduleCylinderPanelRedraw();
+  // Update button active classes
+  document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
   });
 
-  languageSelector.appendChild(select);
-}
-populateLanguageSelector();
+  // Re-translate <option> elements (innerHTML won't reach these)
+  document.querySelectorAll('#mapping-mode option[data-i18n-opt]').forEach(opt => {
+    opt.textContent = t(opt.dataset.i18nOpt);
+  });
 
-// Initialise language (reads localStorage / browser preference, applies translations)
-{
-  const { enFailed } = await initLang();
-  if (enFailed) {
-    // English base strings failed — the UI will show raw keys. Surface a plain
-    // English message since t() won't work reliably at this point.
-    console.error('[i18n] English language file failed to load — UI text will be missing');
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;padding:10px 16px;font-family:sans-serif;font-size:14px;text-align:center';
-    banner.textContent = 'Warning: language files could not be loaded. The interface may show missing text. Check your network connection and reload the page.';
-    document.body.prepend(banner);
+  // Update preset titles and labels
+  updatePresetLabels();
+
+  // Refresh dynamic count text to current language
+  if (currentGeometry) {
+    const triCount = getTriangleCount(currentGeometry);
+    const mb = ((currentGeometry.attributes.position.array.byteLength) / 1024 / 1024).toFixed(2);
+    const sx = currentBounds.size.x.toFixed(2);
+    const sy = currentBounds.size.y.toFixed(2);
+    const sz = currentBounds.size.z.toFixed(2);
+    _setMeshInfo(triCount, mb, sx, sy, sz);
+    refreshExclusionOverlay();
+    if (lastFastDiag) renderFastDiag(lastFastDiag);
+    if (lastAdvancedDiag) renderAdvancedDiag(lastAdvancedDiag);
   }
+  _scheduleCylinderPanelRedraw();
 }
 
-// Sync lang dropdown to current language
+function initLanguageSelector() {
+  document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchLanguage(btn.dataset.lang));
+  });
+}
+initLanguageSelector();
+
+// Initialise language (defaults to 'es', or reads localStorage)
+await initLang();
+
+// Sync toggle buttons to current language
 (function() {
   const lang = getLang();
-  const select = languageSelector.querySelector('select');
-  if (select) {
-    select.value = lang;
-  }
+  document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
 })();
 
 // Theme toggle
@@ -1071,7 +1055,6 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 });
 
 wireEvents();
-showWelcomeIfNeeded();
 // Sync scale number inputs with the slider's initial position
 scaleUVal.value = fmtScaleVal(posToScale(parseFloat(scaleUSlider.value)));
 scaleVVal.value = fmtScaleVal(posToScale(parseFloat(scaleVSlider.value)));
@@ -1080,13 +1063,14 @@ scaleVVal.value = fmtScaleVal(posToScale(parseFloat(scaleVSlider.value)));
 loadDefaultCube();
 
 // Build swatches with placeholder canvases, then load thumbnails
-const DEFAULT_PRESET_NAME = 'Crystal';
+const DEFAULT_PRESET_NAME = 'Cristal';
 const _presetSwatches = IMAGE_PRESETS.map((p, idx) => {
   const swatch = document.createElement('div');
   swatch.className = 'preset-swatch preset-loading';
   swatch.setAttribute('role', 'button');
   swatch.setAttribute('tabindex', '0');
-  swatch.title = p.name;
+  const dName = getPresetDisplayName(p);
+  swatch.title = dName;
 
   const placeholder = document.createElement('canvas');
   placeholder.width = 80; placeholder.height = 80;
@@ -1094,7 +1078,7 @@ const _presetSwatches = IMAGE_PRESETS.map((p, idx) => {
 
   const label = document.createElement('span');
   label.className = 'preset-label';
-  label.textContent = p.name;
+  label.textContent = dName;
   swatch.appendChild(label);
 
   swatch.addEventListener('click', () => selectPreset(idx, swatch));
@@ -1135,10 +1119,10 @@ loadAllThumbnails().then(thumbs => {
   // — we'd otherwise clobber textureSmoothing / scaleU when falling back.
   let applyDefaults = !persistedName;
   if (persistedName) {
-    targetIdx = IMAGE_PRESETS.findIndex(p => p.name === persistedName);
+    targetIdx = IMAGE_PRESETS.findIndex(p => p.name === persistedName || p.nameEn === persistedName);
     if (!(targetIdx >= 0 && PRESETS[targetIdx])) targetIdx = -1;
   }
-  if (targetIdx < 0) targetIdx = IMAGE_PRESETS.findIndex(p => p.name === DEFAULT_PRESET_NAME);
+  if (targetIdx < 0) targetIdx = IMAGE_PRESETS.findIndex(p => p.name === DEFAULT_PRESET_NAME || p.nameEn === DEFAULT_PRESET_NAME);
   if (targetIdx >= 0 && PRESETS[targetIdx]) {
     selectPreset(targetIdx, _presetSwatches[targetIdx], applyDefaults);
   }
@@ -1161,7 +1145,7 @@ async function selectPreset(idx, swatchEl, applyDefaults = true) {
 
   const entry = PRESETS[idx];
   if (!entry) return;
-  activeMapName.textContent = entry.name;
+  activeMapName.textContent = getPresetDisplayName(entry);
   if (applyDefaults) {
     resetTextureSmoothing();
     // defaultScale is a legacy fraction of the model's largest bbox edge —
@@ -1254,7 +1238,7 @@ if (customMapRemoveBtn) {
     _hideCustomMapThumb();
     if (wasActive) {
       // Fall back to the default preset so the viewer keeps a usable texture.
-      const idx = IMAGE_PRESETS.findIndex(p => p.name === DEFAULT_PRESET_NAME);
+      const idx = IMAGE_PRESETS.findIndex(p => p.name === DEFAULT_PRESET_NAME || p.nameEn === DEFAULT_PRESET_NAME);
       if (idx >= 0 && _presetSwatches[idx] && PRESETS[idx]) {
         selectPreset(idx, _presetSwatches[idx], /*applyDefaults=*/false);
       } else {
@@ -1266,30 +1250,7 @@ if (customMapRemoveBtn) {
   });
 }
 
-// ── Welcome popup: open / dismiss ─────────────────────────────────────────────
-function openWelcome({ allowDismissPersist }) {
-  welcomeDontShow.checked = false;
-  welcomeOverlay.classList.remove('hidden');
-  trapFocus(welcomeOverlay);
 
-  const close = () => {
-    if (allowDismissPersist && welcomeDontShow.checked) {
-      try { localStorage.setItem(WELCOME_STORAGE_KEY, WELCOME_LAST_UPDATED); } catch { /* quota / private mode */ }
-    }
-    welcomeOverlay.classList.add('hidden');
-  };
-  welcomeClose.onclick   = close;
-  welcomeGotIt.onclick   = close;
-  welcomeOverlay.onclick = (e) => { if (e.target === welcomeOverlay) close(); };
-}
-
-function showWelcomeIfNeeded() {
-  let seen = null;
-  try { seen = localStorage.getItem(WELCOME_STORAGE_KEY); } catch { /* private mode */ }
-  if (seen !== WELCOME_LAST_UPDATED) {
-    openWelcome({ allowDismissPersist: true });
-  }
-}
 
 // ── Accessibility: Modal focus trap ───────────────────────────────────────────
 function trapFocus(overlay) {
@@ -1622,22 +1583,7 @@ function wireEvents() {
     });
   });
 
-  // ── License ──
-  licenseLink.addEventListener('click', () => { licenseOverlay.classList.remove('hidden'); trapFocus(licenseOverlay); });
-  licenseClose.addEventListener('click', () => licenseOverlay.classList.add('hidden'));
-  licenseOverlay.addEventListener('click', (e) => {
-    if (e.target === licenseOverlay) licenseOverlay.classList.add('hidden');
-  });
 
-  // ── Imprint & Privacy ──
-  imprintLink.addEventListener('click', () => { imprintOverlay.classList.remove('hidden'); trapFocus(imprintOverlay); });
-  imprintClose.addEventListener('click', () => imprintOverlay.classList.add('hidden'));
-  imprintOverlay.addEventListener('click', (e) => {
-    if (e.target === imprintOverlay) imprintOverlay.classList.add('hidden');
-  });
-
-  // ── Welcome / What's New ──
-  welcomeLink.addEventListener('click', () => openWelcome({ allowDismissPersist: false }));
 
   // ── Mesh diagnostics dismiss ──
   meshDiagDismiss.addEventListener('click', () => {
@@ -1901,8 +1847,6 @@ function wireEvents() {
       if (rotateActive) toggleRotateMode(false);
       if (placeOnFaceActive) togglePlaceOnFace(false);
       if (exclusionTool) setExclusionTool(null);
-      licenseOverlay.classList.add('hidden');
-      imprintOverlay.classList.add('hidden');
       closeStepDialog();
       _clearShiftLinePreview();
     }
@@ -5574,7 +5518,7 @@ function resetSettingsToDefaults() {
     updateMaskModeButtons();
     if (currentGeometry) refreshExclusionOverlay();
 
-    const defaultIdx = IMAGE_PRESETS.findIndex(p => p.name === DEFAULT_PRESET_NAME);
+    const defaultIdx = IMAGE_PRESETS.findIndex(p => p.name === DEFAULT_PRESET_NAME || p.nameEn === DEFAULT_PRESET_NAME);
     if (defaultIdx >= 0 && _presetSwatches[defaultIdx] && PRESETS[defaultIdx]) {
       // applyDefaults=true so the preset's defaultScale overrides whatever
       // scale the user had — matches the "fresh session" intent.

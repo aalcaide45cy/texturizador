@@ -32,7 +32,7 @@
   --success:      #1a7f3c;
 }
 
-/* ── Header actions (language selector + theme toggle) ──────────────── */
+/* ── Header actions ─────────────────────────────────────────────────── */
 .header-actions {
   display: flex;
   align-items: center;
@@ -40,41 +40,38 @@
   margin-left: auto;
 }
 
+/* ── Language segmented selector (ES | EN) ─────────────────────────── */
 .lang-seg {
   display: flex;
   align-items: center;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  background: var(--surface2);
   flex-shrink: 0;
 }
 
-.lang-dropdown {
-  height: 28px;
-  padding: 0 24px 0 10px; /* Add right padding for default select arrow if present */
-  background: var(--surface2);
+.lang-toggle-btn {
+  background: transparent;
   border: none;
   color: var(--text-muted);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  padding: 5px 9px;
   cursor: pointer;
-  appearance: none; /* Attempt to remove default styling */
-  -moz-appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%2366667a' d='M0 0l4 4 4-4H0z'/%3E%3C/svg%3E"); /* Custom arrow */
-  background-repeat: no-repeat;
-  background-position: right 8px center;
+  letter-spacing: 0.04em;
   transition: background 0.15s, color 0.15s;
 }
 
-.lang-dropdown:hover {
-  color: var(--accent);
+.lang-toggle-btn:hover {
+  color: var(--text);
 }
 
-.lang-dropdown:focus {
-  outline: none;
+.lang-toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
 }
+
 
 /* ── Theme toggle button ─────────────────────────────────────────────── */
 .theme-toggle {

@@ -41,6 +41,10 @@ export default {
   "projection.planarXZ": "Planar XZ",
   "projection.planarYZ": "Planar YZ",
   "sections.transform": "Transformación",
+  "labels.textureSizeU": "Tamaño U (mm)",
+  "labels.textureSizeV": "Tamaño V (mm)",
+  "tooltips.textureSize": "Tamaño físico de una repetición de textura en milímetros — el mismo valor proporciona el mismo tamaño de patrón en cualquier modelo.",
+
   "labels.scaleU": "Escala U",
   "labels.scaleV": "Escala V",
   "labels.scaleManualHint": "Escribe en el campo para valores más pequeños / grandes",
