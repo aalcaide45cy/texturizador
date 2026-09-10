@@ -1173,6 +1173,9 @@ async function selectPreset(idx, swatchEl, applyDefaults = true) {
   if (entry.texture) {
     activeMapEntry = entry;
     updatePreview();
+    if (currentGeometry && currentBounds) {
+      try { applySmartResolution(); } catch (e) { console.warn('Smart resolution skipped:', e); }
+    }
     return;
   }
 
@@ -1185,6 +1188,9 @@ async function selectPreset(idx, swatchEl, applyDefaults = true) {
     activeMapEntry = PRESETS[idx];
     swatchEl.classList.remove('preset-loading-full');
     updatePreview();
+    if (currentGeometry && currentBounds) {
+      try { applySmartResolution(); } catch (e) { console.warn('Smart resolution skipped:', e); }
+    }
   } catch (err) {
     console.error('Failed to load full texture:', err);
     swatchEl.classList.remove('preset-loading-full');
@@ -2483,6 +2489,9 @@ function handlePlaceOnFaceClick(e) {
   bakeBtn.disabled = (activeMapEntry === null);
   updateSmartResBtnState();
   updatePreview();
+  if (activeMapEntry && currentGeometry && currentBounds) {
+    try { applySmartResolution(); } catch (e) { console.warn('Smart resolution skipped:', e); }
+  }
 
   // Rebuild exclusion overlay with new vertex positions (face indices unchanged)
   if (excludedFaces.size > 0) {
@@ -3003,6 +3012,9 @@ function loadDefaultCube() {
   bakeBtn.disabled = (activeMapEntry === null);
   updateSmartResBtnState();
   updatePreview();
+  if (activeMapEntry && currentGeometry && currentBounds) {
+    try { applySmartResolution(); } catch (e) { console.warn('Smart resolution skipped:', e); }
+  }
 }
 
 // Import-progress bar (STEP tessellation runs in a worker and can take a
@@ -4820,11 +4832,12 @@ async function handleExport(format = 'stl') {
     }
     exportSucceeded = true;
 
-    setProgress(1.0, t('progress.done'));
+    const doneMsg = (typeof t === 'function' && t('progress.done')) ? t('progress.done') : '¡Listo!';
+    setProgress(1.0, `✓ ${doneMsg}`);
     setTimeout(() => {
       exportProgress.classList.add('hidden');
       setProgress(0, '');
-    }, 1500);
+    }, 2500);
   } catch (err) {
     console.error('Export failed:', err);
     if (/maximum size|out of memory|alloc/i.test(err.message)) {
