@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "Bu aracın kullanılmasından doğabilecek herhangi bir hasar, veri kaybı veya sorundan geliştirici <strong>sorumlu</strong> tutulamaz.",
   
-  "license.item8": "Kaynak koduna buradan ulaşabilirsiniz: <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a>.",
   "imprint.btn": "Künye ve Gizlilik",
   "imprint.title": "Künye ve Gizlilik Politikası",
   "imprint.sectionImprint": "Künye (Impressum)",

@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "이 도구 사용으로 인해 발생하는 어떠한 손해, 데이터 손실 또는 문제에 대해서도 작성자는 <strong>책임을 지지 않습니다</strong>.",
   
-  "license.item8": "소스 코드는 <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a>에서 확인할 수 있습니다.",
   "imprint.btn": "고지 및 개인정보",
   "imprint.title": "고지 및 개인정보 처리방침",
   "imprint.sectionImprint": "법적 고지 (Impressum)",

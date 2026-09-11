@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "对于因使用本工具而产生的任何损害、数据丢失或问题，作者<strong>不承担任何责任</strong>。",
   
-  "license.item8": "源代码可在 <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a> 上获取。",
   "imprint.btn": "版权与隐私",
   "imprint.title": "版权与隐私政策",
   "imprint.sectionImprint": "版权声明 (Impressum)",

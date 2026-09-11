@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "Forfatteren kan ikke gøres <strong>ansvarlig</strong> for skader, datatab eller problemer fra brugen af dette værktøj.",
   
-  "license.item8": "Kildekoden er tilgængelig på <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a>.",
   "imprint.btn": "Imprint & privatliv",
   "imprint.title": "Imprint & privatlivspolitik",
   "imprint.sectionImprint": "Imprint (Impressum)",

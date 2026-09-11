@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "Автор не несе <strong>відповідальності</strong> за будь-які збитки, втрату даних або проблеми, що виникають через використання цього інструменту.",
   
-  "license.item8": "Вихідний код доступний на <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a>.",
   "imprint.btn": "Вихідні дані та Конфіденційність",
   "imprint.title": "Вихідні дані та Політика конфіденційності",
   "imprint.sectionImprint": "Вихідні дані (Impressum)",

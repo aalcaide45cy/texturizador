@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "作者は、このツールの使用に起因する<strong>損害</strong>、データ損失、またはその他の問題について責任を負いません。",
   
-  "license.item8": "ソースコードは <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a> で公開されています。",
   "imprint.btn": "特定商取引法に基づく表記とプライバシー",
   "imprint.title": "特定商取引法に基づく表記とプライバシーポリシー",
   "imprint.sectionImprint": "運営者情報 (Impressum)",

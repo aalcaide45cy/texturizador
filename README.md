@@ -53,7 +53,7 @@ Esta aplicación es una aplicación web estática pura (HTML5, CSS3, JavaScript 
 
 1. Ve a tu panel de control en [Vercel](https://vercel.com/).
 2. Haz clic en **"Add New..."** → **"Project"**.
-3. Conecta e importa este repositorio: `https://github.com/aalcaide45cy/texturizador`.
+3. Conecta e importa este repositorio: tu repositorio privado.
 4. En la configuración del proyecto:
    - **Framework Preset**: Selecciona `Other` (o deja en blanco).
    - **Root Directory**: `./`

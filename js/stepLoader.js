@@ -1,6 +1,6 @@
 /* Texturizador */
 
-// STEP (.step/.stp) import via meshStep (https://github.com/Texturizador/meshStep).
+// STEP (.step/.stp) import via meshStep.
 //
 // The B-rep parse + tessellation runs in stepWorker.js so the UI stays live;
 // this module owns the worker lifecycle and converts the returned triangle

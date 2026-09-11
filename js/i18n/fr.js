@@ -191,7 +191,6 @@ export default {
   
   "license.item6": "L'auteur ne saurait être tenu <strong>responsable</strong> d'aucun dommage, perte de données ou problème découlant de l'utilisation de cet outil.",
   
-  "license.item8": "Code source disponible sur <a href=\"https://github.com/aalcaide45cy/texturizador\" target=\"_blank\" rel=\"noopener\">GitHub</a>.",
   "imprint.btn": "Mentions légales et confidentialité",
   "imprint.title": "Mentions légales et politique de confidentialité",
   "imprint.sectionImprint": "Mentions légales (Impressum)",
