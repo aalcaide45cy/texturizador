@@ -27,6 +27,7 @@ import { getScaleReferenceLengths } from './mapping.js';
 import { QuantizedPointMap } from './meshIndex.js';
 import { APP_VERSION } from './version.js';
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
+import { initModeManager, switchMode, setRestoreTexturizerCallback } from './modeManager.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -6562,3 +6563,128 @@ window.addEventListener('keydown', (e) => {
 _restoreSessionSettings();
 _baselineSnapshot = _captureUndoSnapshot();
 _updateUndoButtons();
+
+
+// ─── Direct Geometry Loading (from 3D Parametric Generators) ───────────
+
+export function loadDirectGeometry(geometry, name = 'modelo_generado') {
+  precisionToken++;
+  dispPreviewToken++;
+  exportToken++;
+  diagToken++;
+
+  if (currentGeometry && currentGeometry !== geometry) {
+    currentGeometry.dispose();
+  }
+
+  currentGeometry = geometry;
+  currentGeometry.computeBoundingBox();
+  const box = currentGeometry.boundingBox;
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  currentBounds = { min: box.min, max: box.max, size, center };
+
+  updateZHeightBounds();
+  currentPoseRot   = new THREE.Quaternion();
+  currentPoseTrans = new THREE.Vector3();
+  currentStlName   = name;
+  currentStlExt    = '.stl';
+  checkAmplitudeWarning();
+
+  if (previewMaterial) {
+    previewMaterial.dispose();
+    previewMaterial = null;
+  }
+
+  if (!activeMapEntry && PRESETS.length > 0) {
+    const idx = PRESETS.findIndex(p => p != null);
+    if (idx >= 0) {
+      const swatches = document.querySelectorAll('.preset-swatch');
+      if (swatches[idx]) selectPreset(idx, swatches[idx]);
+    }
+  }
+
+  mappingSelect.value = String(settings.mappingMode);
+  capAngleRow.style.display = settings.mappingMode === 3 ? '' : 'none';
+
+  settings.cylinderCenterX = null;
+  settings.cylinderCenterY = null;
+  settings.cylinderRadius  = null;
+  _cylSilhouetteCanvas = null;
+  _cylSilhouetteGeometry = null;
+  _cylSilhouetteAnchor = null;
+  updateCylinderUIVisibility();
+
+  loadGeometry(currentGeometry);
+  dropHint.classList.add('hidden');
+
+  if (dispPreviewGeometry) { dispPreviewGeometry.dispose(); dispPreviewGeometry = null; }
+  settings.useDisplacement = false;
+  dispPreviewToggle.checked = false;
+
+  if (precisionGeometry) { precisionGeometry.dispose(); precisionGeometry = null; }
+  precisionMaskingEnabled = false;
+  if (precisionMaskingToggle) precisionMaskingToggle.checked = false;
+
+  meshDiagnostics.classList.add('hidden');
+  meshDiagAdvanced.classList.add('hidden');
+  lastFastDiag = null;
+  lastAdvancedDiag = null;
+  clearDiagHighlight();
+
+  excludedFaces = new Set();
+  precisionExcludedFaces = new Set();
+  exclusionTool = null;
+  eraseMode = false;
+  isPainting = false;
+  maskModeChosen = selectionMode;
+  updateMaskModeButtons();
+
+  const adjData = buildAdjacency(currentGeometry);
+  triangleAdjacency = adjData.adjacency;
+  triangleCentroids = adjData.centroids;
+  triangleFaceNormals = adjData.faceNormals;
+  updateMeshDiagnostics(adjData, currentGeometry.attributes.position.count / 3);
+
+  const diag = Math.sqrt(size.x ** 2 + size.y ** 2 + size.z ** 2);
+  const defaultEdge = Math.max(0.05, Math.min(5.0, +(diag / 250).toFixed(2)));
+  settings.refineLength = defaultEdge;
+  refineLenSlider.value = defaultEdge;
+  refineLenVal.value = defaultEdge;
+  checkResolutionWarning();
+
+  const triCount = getTriangleCount(currentGeometry);
+  const mb = ((currentGeometry.attributes.position.array.byteLength) / 1024 / 1024).toFixed(2);
+  _setMeshInfo(triCount, mb, size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
+
+  exportBtn.disabled = (activeMapEntry === null);
+  export3mfBtn.disabled = (activeMapEntry === null);
+  updateSmartResBtnState();
+  updatePreview();
+}
+
+// ─── Initialize Multi-Mode System ───────────────────────────────────────
+initModeManager({
+  onSendToTexturizer: (geometry, name) => {
+    loadDirectGeometry(geometry, name);
+    switchMode('texturizer');
+    showSmartFitToast([
+      'Modelo transferido a Texturizado correctamente',
+      'Listo para aplicar relieves, mapas de desplazamiento y Ajuste Inteligente'
+    ]);
+  }
+});
+
+setRestoreTexturizerCallback(() => {
+  if (currentGeometry) {
+    loadGeometry(currentGeometry, previewMaterial);
+    dropHint.classList.add('hidden');
+  } else {
+    dropHint.classList.remove('hidden');
+  }
+});
+
+window.__hasActiveTexturizerMesh = () => !!currentGeometry;
+window.__loadDirectGeometry = loadDirectGeometry;

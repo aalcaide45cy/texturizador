@@ -49,6 +49,24 @@
       <img src="logo.svg" alt="Texturizador" width="24" height="24" />
       <span>Texturizador <span id="app-version" class="app-version"></span></span>
     </div>
+    <nav class="mode-nav" aria-label="Modos de aplicación">
+      <button type="button" class="mode-nav-btn active" data-mode="texturizer" data-i18n-title="modes.texturizerDesc" title="Texturizado y Relieves 3D">
+        <span class="mode-nav-icon">🎨</span>
+        <span data-i18n="modes.texturizer">Texturizado</span>
+      </button>
+      <button type="button" class="mode-nav-btn" data-mode="frame" data-i18n-title="modes.frameDesc" title="Generador de Marcos de Fotos">
+        <span class="mode-nav-icon">🖼️</span>
+        <span data-i18n="modes.frame">Marcos de Fotos</span>
+      </button>
+      <button type="button" class="mode-nav-btn" data-mode="phone" data-i18n-title="modes.phoneDesc" title="Generador de Soportes para Móvil y Tablet">
+        <span class="mode-nav-icon">📱</span>
+        <span data-i18n="modes.phone">Soportes de Móvil</span>
+      </button>
+      <button type="button" class="mode-nav-btn" data-mode="lamp" data-i18n-title="modes.lampDesc" title="Generador de Lámparas 3D Modernas">
+        <span class="mode-nav-icon">💡</span>
+        <span data-i18n="modes.lamp">Lámparas 3D</span>
+      </button>
+    </nav>
     <div class="header-actions">
       <div class="project-io">
         <button id="undo-btn" class="icon-btn" data-i18n-title="header.undo" title="Deshacer (Ctrl+Z)" disabled>
@@ -215,6 +233,9 @@
 
     <!-- ─── Settings Panel ───────────────────────────────────────── -->
     <aside id="settings-panel">
+
+      <!-- ═══════════ MODO 1: TEXTURIZADO ═══════════ -->
+      <div id="mode-panel-texturizer" class="mode-panel active">
 
       <!-- Smart Fit Card -->
       <div class="smart-fit-card" id="smart-fit-card">
@@ -734,6 +755,292 @@
           <button id="export-3mf-btn" class="export-btn" disabled data-i18n="ui.export3mf" data-i18n-title="tooltips.export3mf" title="Archivo más pequeño — puede no ser compatible con todos los laminadores">Exportar 3MF</button>
         </div>
       </section>
+      </div> <!-- /#mode-panel-texturizer -->
+
+      <!-- ═══════════ MODO 2: MARCOS DE FOTOS ═══════════ -->
+      <div id="mode-panel-frame" class="mode-panel hidden">
+        <div class="generator-header-card">
+          <div class="generator-title">
+            <span>🖼️</span>
+            <span data-i18n="frameGen.title">Generador de Marcos de Fotos</span>
+          </div>
+          <p class="generator-desc" data-i18n="frameGen.desc">Diseña marcos paramétricos con ranura interior para cristal y foto, soporte abatible y relieves decorativos listos para imprimir en 3D.</p>
+          <div id="frame-info-badge" class="generator-info-badge">📐 Calculando dimensiones…</div>
+        </div>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="frameGen.secPresets">Plantilla y Formato</span>
+          </div>
+          <div class="field-row">
+            <label for="frame-shape-select" data-i18n="frameGen.shape">Forma del marco</label>
+            <select id="frame-shape-select">
+              <option value="rectangular" data-i18n="frameGen.shapeRect">Rectangular clásico</option>
+              <option value="rounded" data-i18n="frameGen.shapeRounded">Esquinas redondeadas</option>
+              <option value="arch" data-i18n="frameGen.shapeArch">Arco / Catedral</option>
+              <option value="oval" data-i18n="frameGen.shapeOval">Ovalado / Elipse</option>
+              <option value="hexagon" data-i18n="frameGen.shapeHexagon">Hexagonal moderno</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="frame-preset-select" data-i18n="frameGen.preset">Tamaño de foto</label>
+            <select id="frame-preset-select">
+              <option value="10x15" selected>10 × 15 cm (4 × 6")</option>
+              <option value="13x18">13 × 18 cm (5 × 7")</option>
+              <option value="15x20">15 × 20 cm (6 × 8")</option>
+              <option value="polaroid">Estilo Polaroid (7.9 × 7.9 cm)</option>
+              <option value="instax">Instax Mini (4.6 × 6.2 cm)</option>
+              <option value="custom" data-i18n="frameGen.custom">Personalizado (mm)…</option>
+            </select>
+          </div>
+          <div id="frame-custom-dims" class="custom-dims-row hidden">
+            <div>
+              <label for="frame-photo-w" class="field-sublabel" data-i18n="frameGen.photoW">Ancho foto (mm)</label>
+              <input type="number" id="frame-photo-w" min="20" max="400" value="100" />
+            </div>
+            <div>
+              <label for="frame-photo-h" class="field-sublabel" data-i18n="frameGen.photoH">Alto foto (mm)</label>
+              <input type="number" id="frame-photo-h" min="20" max="400" value="150" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="frameGen.secDims">Dimensiones del Marco</span>
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="frame-border-w" data-i18n="frameGen.borderWidth">Ancho de borde</label>
+              <span id="frame-border-w-val" class="slider-val">25 mm</span>
+            </div>
+            <input type="range" id="frame-border-w" min="12" max="60" value="25" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="frame-depth" data-i18n="frameGen.frameDepth">Profundidad total</label>
+              <span id="frame-depth-val" class="slider-val">16 mm</span>
+            </div>
+            <input type="range" id="frame-depth" min="8" max="35" value="16" />
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="frameGen.secRelief">Relieve Frontal</span>
+          </div>
+          <div class="field-row">
+            <label for="frame-relief-select" data-i18n="frameGen.relief">Perfil decorativo</label>
+            <select id="frame-relief-select">
+              <option value="smooth" data-i18n="frameGen.reliefSmooth">Liso plano (ideal texturizar)</option>
+              <option value="chamfer" data-i18n="frameGen.reliefChamfer">Biselado / Chaflán 45°</option>
+              <option value="stepped" data-i18n="frameGen.reliefStepped">Escalonado Art Déco</option>
+              <option value="ribbed" data-i18n="frameGen.reliefRibbed">Ranurado / Acanalado</option>
+              <option value="wave" data-i18n="frameGen.reliefWave">Onda suave ergonómica</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="frameGen.secAccessories">Montaje y Accesorios</span>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="frame-kickstand-chk" />
+            <span data-i18n="frameGen.kickstand">Pata de apoyo trasera integrada (15° de inclinación)</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="frame-wallmount-chk" checked />
+            <span data-i18n="frameGen.wallMount">Ranura para colgar en pared con clavo/tornillo</span>
+          </label>
+        </section>
+
+        <section class="panel-section generator-actions-section">
+          <button type="button" id="frame-send-texturizer-btn" class="btn-send-texturizer">
+            <span class="sparkle-icon">✨</span>
+            <span data-i18n="frameGen.sendTexturizer">Enviar a Texturizado</span>
+          </button>
+          <div class="export-buttons">
+            <button type="button" id="frame-export-stl-btn" class="export-btn" data-i18n="ui.exportStl">Exportar STL</button>
+            <button type="button" id="frame-export-3mf-btn" class="export-btn" data-i18n="ui.export3mf">Exportar 3MF</button>
+          </div>
+        </section>
+      </div> <!-- /#mode-panel-frame -->
+
+      <!-- ═══════════ MODO 3: SOPORTES DE MÓVIL ═══════════ -->
+      <div id="mode-panel-phone" class="mode-panel hidden">
+        <div class="generator-header-card">
+          <div class="generator-title">
+            <span>📱</span>
+            <span data-i18n="phoneGen.title">Generador de Soportes de Móvil</span>
+          </div>
+          <p class="generator-desc" data-i18n="phoneGen.desc">Crea soportes estables y ergonómicos para móvil y tablet con ángulo de visión regulable y ranura de carga sin dobleces forzados de cable.</p>
+          <div id="phone-info-badge" class="generator-info-badge">📐 Calculando dimensiones…</div>
+        </div>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="phoneGen.secPresets">Plantillas Predefinidas</span>
+          </div>
+          <div class="field-row">
+            <label for="phone-preset-select" data-i18n="phoneGen.preset">Modelo de soporte</label>
+            <select id="phone-preset-select">
+              <option value="compact" selected data-i18n="phoneGen.presetCompact">Compacto de escritorio (ligero)</option>
+              <option value="charging" data-i18n="phoneGen.presetCharging">Base de carga con paso de cable</option>
+              <option value="dual-angle" data-i18n="phoneGen.presetDual">Doble ángulo reversible (45° y 70°)</option>
+              <option value="wave" data-i18n="phoneGen.presetWave">Orgánico escultural (Wave)</option>
+              <option value="tablet" data-i18n="phoneGen.presetTablet">Soporte ancho para iPad / Tablet</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="phoneGen.secGeometry">Dimensiones y Ángulo</span>
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="phone-width" data-i18n="phoneGen.width">Ancho del soporte</label>
+              <span id="phone-width-val" class="slider-val">65 mm</span>
+            </div>
+            <input type="range" id="phone-width" min="45" max="140" value="65" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="phone-angle" data-i18n="phoneGen.angle">Ángulo de inclinación</label>
+              <span id="phone-angle-val" class="slider-val">60°</span>
+            </div>
+            <input type="range" id="phone-angle" min="40" max="75" value="60" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="phone-slot-depth" data-i18n="phoneGen.slotDepth">Espacio para funda (profundidad)</label>
+              <span id="phone-slot-depth-val" class="slider-val">14 mm</span>
+            </div>
+            <input type="range" id="phone-slot-depth" min="10" max="24" value="14" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="phone-lip-height" data-i18n="phoneGen.lipHeight">Altura tope de sujeción</label>
+              <span id="phone-lip-height-val" class="slider-val">14 mm</span>
+            </div>
+            <input type="range" id="phone-lip-height" min="8" max="24" value="14" />
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="phoneGen.secFeatures">Conectividad</span>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="phone-cable-chk" />
+            <span data-i18n="phoneGen.cableSlot">Ranura central para cable de carga USB-C / Lightning</span>
+          </label>
+        </section>
+
+        <section class="panel-section generator-actions-section">
+          <button type="button" id="phone-send-texturizer-btn" class="btn-send-texturizer">
+            <span class="sparkle-icon">✨</span>
+            <span data-i18n="phoneGen.sendTexturizer">Enviar a Texturizado</span>
+          </button>
+          <div class="export-buttons">
+            <button type="button" id="phone-export-stl-btn" class="export-btn" data-i18n="ui.exportStl">Exportar STL</button>
+            <button type="button" id="phone-export-3mf-btn" class="export-btn" data-i18n="ui.export3mf">Exportar 3MF</button>
+          </div>
+        </section>
+      </div> <!-- /#mode-panel-phone -->
+
+      <!-- ═══════════ MODO 4: LÁMPARAS 3D ═══════════ -->
+      <div id="mode-panel-lamp" class="mode-panel hidden">
+        <div class="generator-header-card">
+          <div class="generator-title">
+            <span>💡</span>
+            <span data-i18n="lampGen.title">Generador de Lámparas 3D</span>
+          </div>
+          <p class="generator-desc" data-i18n="lampGen.desc">Pantallas de lámpara de diseño moderno inspiradas en las tendencias de impresión 3D: origami plisado, espirales helicoidales y estética Bauhaus.</p>
+          <div id="lamp-info-badge" class="generator-info-badge">📐 Calculando dimensiones…</div>
+        </div>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="lampGen.secStyle">Estilo y Patrón</span>
+          </div>
+          <div class="field-row">
+            <label for="lamp-preset-select" data-i18n="lampGen.preset">Estilo de lámpara</label>
+            <select id="lamp-preset-select">
+              <option value="pleated" selected data-i18n="lampGen.stylePleated">Origami Plisada (Accordion)</option>
+              <option value="spiral" data-i18n="lampGen.styleSpiral">Hélice Espiral Torsión</option>
+              <option value="mushroom" data-i18n="lampGen.styleMushroom">Bauhaus Seta (Mushroom)</option>
+              <option value="wavy" data-i18n="lampGen.styleWavy">Ondas Sinusoidales 3D</option>
+              <option value="faceted" data-i18n="lampGen.styleFaceted">Geométrica Facetada Diamante</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="lampGen.secDims">Dimensiones Generales</span>
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="lamp-height" data-i18n="lampGen.height">Altura total</label>
+              <span id="lamp-height-val" class="slider-val">180 mm</span>
+            </div>
+            <input type="range" id="lamp-height" min="90" max="300" value="180" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="lamp-base-diam" data-i18n="lampGen.baseDiam">Diámetro de la base</label>
+              <span id="lamp-base-diam-val" class="slider-val">110 mm</span>
+            </div>
+            <input type="range" id="lamp-base-diam" min="70" max="240" value="110" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="lamp-top-diam" data-i18n="lampGen.topDiam">Diámetro superior</label>
+              <span id="lamp-top-diam-val" class="slider-val">85 mm</span>
+            </div>
+            <input type="range" id="lamp-top-diam" min="40" max="240" value="85" />
+          </div>
+          <div class="field-row slider-field">
+            <div class="slider-header">
+              <label for="lamp-wall" data-i18n="lampGen.wallThickness">Grosor de pared traslúcida</label>
+              <span id="lamp-wall-val" class="slider-val">2.0 mm</span>
+            </div>
+            <input type="range" id="lamp-wall" min="1.2" max="4.0" step="0.2" value="2.0" />
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-header">
+            <span class="section-title" data-i18n="lampGen.secSocket">Casquillo y Cable</span>
+          </div>
+          <div class="field-row">
+            <label for="lamp-socket-select" data-i18n="lampGen.socket">Tipo de casquillo</label>
+            <select id="lamp-socket-select">
+              <option value="e14" selected>E14 (Rosca estándar fina Ø28.5 mm)</option>
+              <option value="e27">E27 (Rosca estándar gruesa Ø41.0 mm)</option>
+              <option value="bambu-led">Bambu Lab LED Lamp Kit 001 (Ø60.5 mm)</option>
+              <option value="vase" data-i18n="lampGen.socketVase">Modo Jarrón / Abierta (Vase Mode)</option>
+            </select>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="lamp-cord-notch-chk" checked />
+            <span data-i18n="lampGen.cordNotch">Ranura pasacables en la base (apoyo plano en mesa)</span>
+          </label>
+        </section>
+
+        <section class="panel-section generator-actions-section">
+          <button type="button" id="lamp-send-texturizer-btn" class="btn-send-texturizer">
+            <span class="sparkle-icon">✨</span>
+            <span data-i18n="lampGen.sendTexturizer">Enviar a Texturizado</span>
+          </button>
+          <div class="export-buttons">
+            <button type="button" id="lamp-export-stl-btn" class="export-btn" data-i18n="ui.exportStl">Exportar STL</button>
+            <button type="button" id="lamp-export-3mf-btn" class="export-btn" data-i18n="ui.export3mf">Exportar 3MF</button>
+          </div>
+        </section>
+      </div> <!-- /#mode-panel-lamp -->
 
     </aside>
   </main>

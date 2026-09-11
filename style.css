@@ -2525,3 +2525,226 @@ input[type="number"].val:focus { outline: none; border-color: var(--accent); }
   background: var(--accent);
   color: #fff;
 }
+
+/* ── Multi-Mode Navigation & 3D Generators ────────────────────────────── */
+.mode-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  margin-left: 12px;
+}
+
+.mode-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.mode-nav-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .mode-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.mode-nav-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(124, 106, 255, 0.35);
+}
+
+.mode-nav-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Mode Panels ──────────────────────────────────────────────────────── */
+.mode-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mode-panel.hidden {
+  display: none !important;
+}
+
+/* ── Generator Header Cards ───────────────────────────────────────────── */
+.generator-header-card {
+  background: linear-gradient(135deg, rgba(124, 106, 255, 0.14), rgba(56, 189, 248, 0.08));
+  border: 1px solid rgba(124, 106, 255, 0.3);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+[data-theme="light"] .generator-header-card {
+  background: linear-gradient(135deg, rgba(99, 85, 224, 0.10), rgba(14, 165, 233, 0.06));
+  border-color: rgba(99, 85, 224, 0.25);
+}
+
+.generator-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.generator-desc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.generator-info-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-hover);
+  background: rgba(124, 106, 255, 0.16);
+  border: 1px solid rgba(124, 106, 255, 0.25);
+  border-radius: 4px;
+  padding: 5px 9px;
+  align-self: flex-start;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+[data-theme="light"] .generator-info-badge {
+  color: var(--accent);
+  background: rgba(99, 85, 224, 0.12);
+  border-color: rgba(99, 85, 224, 0.2);
+}
+
+/* ── Generator Inputs & Custom Dimensions ─────────────────────────────── */
+.custom-dims-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.field-sublabel {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.custom-dims-row input[type="number"] {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.slider-field {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.slider-val {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-hover);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+[data-theme="light"] .slider-val {
+  color: var(--accent);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  margin-top: 6px;
+  user-select: none;
+}
+
+.checkbox-row input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+/* ── Primary "Enviar a Texturizado" Button ────────────────────────────── */
+.btn-send-texturizer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, #7c6aff 0%, #5b46f6 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(124, 106, 255, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  margin-bottom: 10px;
+}
+
+.btn-send-texturizer:hover {
+  background: linear-gradient(135deg, #9485ff 0%, #705eff 100%);
+  box-shadow: 0 6px 18px rgba(124, 106, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-send-texturizer:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(124, 106, 255, 0.35);
+}
+
+.sparkle-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.generator-actions-section {
+  padding-top: 6px;
+}
