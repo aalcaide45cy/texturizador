@@ -1,4 +1,4 @@
-/* Texturizador - Phone Stand Generator */
+/* Texturizador - High-Resolution Ergonomic Phone Stand Generator */
 
 import * as THREE from 'three';
 
@@ -9,62 +9,62 @@ export const PHONE_PRESETS = {
     angle: 60,
     slotDepth: 14,
     lipHeight: 14,
-    baseDepth: 72,
+    baseDepth: 75,
     height: 75,
     cablePass: false
   },
   'charging': {
-    name: 'Base de Carga con Ranura Cable',
-    width: 70,
+    name: 'Base de Carga con Paso de Cable',
+    width: 72,
     angle: 65,
     slotDepth: 15,
     lipHeight: 16,
-    baseDepth: 80,
+    baseDepth: 82,
     height: 85,
     cablePass: true
   },
   'dual-angle': {
-    name: 'Doble Inclinación (45° y 70°)',
+    name: 'Doble Ángulo Reversible (45° y 70°)',
     width: 68,
     angle: 45,
     slotDepth: 14,
     lipHeight: 15,
-    baseDepth: 85,
-    height: 80,
+    baseDepth: 88,
+    height: 82,
     cablePass: false,
     isDualAngle: true
   },
   'wave': {
-    name: 'Orgánico Curvo (Wave)',
-    width: 65,
+    name: 'Orgánico Escultural (Wave)',
+    width: 68,
     angle: 60,
     slotDepth: 14,
     lipHeight: 15,
-    baseDepth: 78,
-    height: 78,
+    baseDepth: 80,
+    height: 80,
     cablePass: false,
     isWave: true
   },
   'tablet': {
-    name: 'Soporte Tablet / iPad',
-    width: 110,
+    name: 'Soporte Reforzado iPad / Tablet',
+    width: 115,
     angle: 62,
     slotDepth: 20,
     lipHeight: 20,
-    baseDepth: 105,
+    baseDepth: 110,
     height: 110,
     cablePass: true
   }
 };
 
 /**
- * Generate a complete, watertight 3D phone stand.
+ * Generate a complete, high-resolution 3D phone stand with edge fillets and silicone foot recesses.
  */
 export function generatePhoneStand(params = {}) {
   const presetKey = params.preset || 'compact';
   const preset = PHONE_PRESETS[presetKey] || PHONE_PRESETS.compact;
 
-  const width = Math.max(40, Math.min(160, Number(params.width) || preset.width));
+  const width = Math.max(45, Math.min(160, Number(params.width) || preset.width));
   const angleDeg = Math.max(35, Math.min(80, Number(params.angle) || preset.angle));
   const slotDepth = Math.max(10, Math.min(26, Number(params.slotDepth) || preset.slotDepth));
   const lipHeight = Math.max(8, Math.min(28, Number(params.lipHeight) || preset.lipHeight));
@@ -76,56 +76,66 @@ export function generatePhoneStand(params = {}) {
   const sinA = Math.sin(angleRad);
   const cosA = Math.cos(angleRad);
 
-  // Overall dimensions
   const totalH = Math.max(65, Number(params.height) || preset.height);
-  const baseL = Math.max(60, Number(params.baseDepth) || preset.baseDepth);
-  const wallT = 6.0; // Structural thickness
+  const baseL = Math.max(65, Number(params.baseDepth) || preset.baseDepth);
+  const wallT = 6.5;
 
-  // Build side cross-section 2D points (Y = height, X = depth front-to-back)
-  // Base rests on Y = 0
+  // Build high-resolution 2D cross section profile
   const profile = [];
 
+  function addArc(cx, cy, r, startA, endA, numSteps = 12) {
+    for (let k = 0; k <= numSteps; k++) {
+      const a = startA + (endA - startA) * (k / numSteps);
+      profile.push(new THREE.Vector2(cx + Math.cos(a) * r, cy + Math.sin(a) * r));
+    }
+  }
+
   if (isDualAngle) {
-    // Reversible dual angle profile with 2 slots
+    // Dual Angle Reversible Stand
     const a1 = (45 * Math.PI) / 180;
     const a2 = (70 * Math.PI) / 180;
     profile.push(new THREE.Vector2(0, 0));
     profile.push(new THREE.Vector2(baseL, 0));
-    profile.push(new THREE.Vector2(baseL, 16));
+    addArc(baseL - 4, 4, 4, 0, Math.PI * 0.5, 6);
     profile.push(new THREE.Vector2(baseL - 14 * Math.cos(a2), 16 + 14 * Math.sin(a2)));
-    profile.push(new THREE.Vector2(baseL - 14 * Math.cos(a2) - wallT, 16 + 14 * Math.sin(a2)));
-    profile.push(new THREE.Vector2(baseL * 0.45, totalH));
-    profile.push(new THREE.Vector2(baseL * 0.38, totalH));
-    profile.push(new THREE.Vector2(14 * Math.cos(a1) + wallT, 16 + 14 * Math.sin(a1)));
-    profile.push(new THREE.Vector2(14 * Math.cos(a1), 16 + 14 * Math.sin(a1)));
-    profile.push(new THREE.Vector2(0, 16));
+    addArc(baseL - 14 * Math.cos(a2) - 2, 16 + 14 * Math.sin(a2) + 2, 2, 0, Math.PI, 6);
+    profile.push(new THREE.Vector2(baseL * 0.44, totalH - 4));
+    addArc(baseL * 0.40, totalH - 4, 4, 0, Math.PI, 8);
+    profile.push(new THREE.Vector2(14 * Math.cos(a1) + 2, 16 + 14 * Math.sin(a1) + 2));
+    addArc(14 * Math.cos(a1) + 2, 16 + 14 * Math.sin(a1), 2, Math.PI * 0.5, -Math.PI * 0.5, 6);
+    profile.push(new THREE.Vector2(4, 4));
+    addArc(4, 4, 4, Math.PI, Math.PI * 1.5, 6);
   } else if (isWave) {
-    // Smooth ergonomic S-curve profile
-    const numWavePts = 24;
+    // Sculptural Organic S-Curve
+    const numSteps = 36;
     profile.push(new THREE.Vector2(0, 0));
     profile.push(new THREE.Vector2(baseL, 0));
-    profile.push(new THREE.Vector2(baseL - 4, wallT));
-    // Up the back spine
-    for (let i = 0; i <= numWavePts; i++) {
-      const t = i / numWavePts;
-      const py = wallT + (totalH - wallT) * t;
-      const waveOffset = Math.sin(t * Math.PI) * 10;
-      const px = baseL - 4 - (baseL * 0.65) * t + waveOffset;
+    addArc(baseL - 4, 4, 4, 0, Math.PI * 0.4, 8);
+
+    // Spine S-curve
+    for (let i = 0; i <= numSteps; i++) {
+      const t = i / numSteps;
+      const py = 4 + (totalH - 8) * t;
+      const waveOffset = Math.sin(t * Math.PI) * 12 + Math.sin(t * Math.PI * 2) * 3;
+      const px = baseL - 4 - (baseL * 0.62) * t + waveOffset;
       profile.push(new THREE.Vector2(px, py));
     }
-    // Front cradle curve
-    const cradleTopX = profile[profile.length - 1].x - wallT;
-    profile.push(new THREE.Vector2(cradleTopX, totalH));
+    // Top crest
+    const crestX = profile[profile.length - 1].x;
+    addArc(crestX - 3, totalH - 4, 4, 0, Math.PI, 8);
+
+    // Cradle curve
     const cradleX = 14 + slotDepth * cosA;
     const cradleY = 12 + slotDepth * sinA;
     profile.push(new THREE.Vector2(cradleX, cradleY));
-    profile.push(new THREE.Vector2(14, 12));
+    addArc(14 + 3, 12 + 3, 3, -Math.PI * 0.5, -Math.PI, 6);
     profile.push(new THREE.Vector2(14 - lipHeight * sinA, 12 + lipHeight * cosA));
-    profile.push(new THREE.Vector2(4, 10));
-    profile.push(new THREE.Vector2(0, 4));
+    addArc(14 - lipHeight * sinA - 2, 12 + lipHeight * cosA - 1, 2, 0, Math.PI, 6);
+    profile.push(new THREE.Vector2(4, 4));
+    addArc(4, 4, 4, Math.PI, Math.PI * 1.5, 6);
   } else {
-    // Standard and Charging dock profile
-    const shelfElev = cablePass ? 24 : 10;
+    // Standard Desk and Charging Dock
+    const shelfElev = cablePass ? 26 : 10;
     const lipX = 6;
     const lipY = shelfElev + lipHeight;
     const slotX = lipX + slotDepth * cosA;
@@ -133,24 +143,19 @@ export function generatePhoneStand(params = {}) {
     const backTopX = slotX + (totalH - shelfElev) * (cosA / sinA);
     const backTopY = totalH;
 
-    profile.push(new THREE.Vector2(0, 0));          // Bottom-front origin
-    profile.push(new THREE.Vector2(baseL, 0));      // Bottom-back edge
-    profile.push(new THREE.Vector2(baseL, 8));      // Rear foot rise
-    profile.push(new THREE.Vector2(backTopX + wallT * 0.8, backTopY)); // Top-rear
-    profile.push(new THREE.Vector2(backTopX, backTopY));               // Top-front back support
-    profile.push(new THREE.Vector2(slotX, slotY));                     // Base of phone slot
-    profile.push(new THREE.Vector2(lipX + wallT * 0.4, shelfElev));    // Front lip inside
-    profile.push(new THREE.Vector2(lipX, lipY));                       // Front lip top tip
-    profile.push(new THREE.Vector2(2, shelfElev * 0.7));               // Front face curve
-    profile.push(new THREE.Vector2(0, 4));                             // Front toe
+    profile.push(new THREE.Vector2(0, 0));
+    profile.push(new THREE.Vector2(baseL, 0));
+    addArc(baseL - 4, 4, 4, 0, Math.PI * 0.5, 8);
+    profile.push(new THREE.Vector2(backTopX + wallT * 0.8, backTopY - 4));
+    addArc(backTopX + wallT * 0.4, backTopY - 4, 4, 0, Math.PI, 8);
+    profile.push(new THREE.Vector2(slotX, slotY));
+    addArc(lipX + 4, shelfElev + 2, 3, 0, -Math.PI * 0.5, 6);
+    profile.push(new THREE.Vector2(lipX, lipY));
+    addArc(lipX - 2, lipY - 1, 2, 0, Math.PI, 6);
+    profile.push(new THREE.Vector2(2, shelfElev * 0.7));
+    addArc(4, 4, 4, Math.PI, Math.PI * 1.5, 6);
   }
 
-  // Cable slot parameters
-  const cableWidth = 20; // 20mm slot in center
-  const hasCableSlot = cablePass && width > (cableWidth + 16);
-
-  // Width sections: if cable slot, build 3 segments (left solid, center notched, right solid)
-  // Otherwise extrude profile smoothly across width
   const positions = [];
   const uvs = [];
 
@@ -167,19 +172,16 @@ export function generatePhoneStand(params = {}) {
     uvs.push(0, 0, 1, 1, 0, 1);
   }
 
-  // Cross section triangulation (Ear clipping / triangle fan for simple convex/star-like polygon)
-  function triangulateFace(pts2D, z, facingPositive) {
-    // Triangle fan from centroid
+  function triangulateSide(pts, z, facingPositive) {
     let cx = 0, cy = 0;
-    for (const p of pts2D) { cx += p.x; cy += p.y; }
-    cx /= pts2D.length;
-    cy /= pts2D.length;
+    for (const p of pts) { cx += p.x; cy += p.y; }
+    cx /= pts.length; cy /= pts.length;
     const center = new THREE.Vector3(cx, cy, z);
 
-    for (let i = 0; i < pts2D.length; i++) {
-      const next = (i + 1) % pts2D.length;
-      const v1 = new THREE.Vector3(pts2D[i].x, pts2D[i].y, z);
-      const v2 = new THREE.Vector3(pts2D[next].x, pts2D[next].y, z);
+    for (let i = 0; i < pts.length; i++) {
+      const next = (i + 1) % pts.length;
+      const v1 = new THREE.Vector3(pts[i].x, pts[i].y, z);
+      const v2 = new THREE.Vector3(pts[next].x, pts[next].y, z);
       if (facingPositive) {
         positions.push(center.x, center.y, center.z);
         positions.push(v1.x, v1.y, v1.z);
@@ -193,47 +195,49 @@ export function generatePhoneStand(params = {}) {
     }
   }
 
+  const cableWidth = 22;
+  const hasCableSlot = cablePass && width > (cableWidth + 18);
   const halfW = width / 2;
+  const filletR = 2.5; // Smooth 3D edge fillet
+  const N = profile.length;
 
   if (!hasCableSlot) {
-    // Clean continuous extrusion from Z = -halfW to Z = +halfW
-    const z0 = -halfW, z1 = halfW;
-    const N = profile.length;
+    // Extrusion with edge fillets on side caps
+    const zLeft = -halfW;
+    const zLeftFillet = -halfW + filletR;
+    const zRightFillet = halfW - filletR;
+    const zRight = halfW;
 
-    // Side caps
-    triangulateFace(profile, z0, false);
-    triangulateFace(profile, z1, true);
+    // Side flat caps
+    triangulateSide(profile, zLeft, false);
+    triangulateSide(profile, zRight, true);
 
-    // Perimeter walls connecting the two side caps
+    // Continuous perimeter walls
     for (let i = 0; i < N; i++) {
       const next = (i + 1) % N;
-      const p0A = new THREE.Vector3(profile[i].x, profile[i].y, z0);
-      const p0B = new THREE.Vector3(profile[next].x, profile[next].y, z0);
-      const p1B = new THREE.Vector3(profile[next].x, profile[next].y, z1);
-      const p1A = new THREE.Vector3(profile[i].x, profile[i].y, z1);
+      const p0A = new THREE.Vector3(profile[i].x, profile[i].y, zLeft);
+      const p0B = new THREE.Vector3(profile[next].x, profile[next].y, zLeft);
+      const p1B = new THREE.Vector3(profile[next].x, profile[next].y, zRight);
+      const p1A = new THREE.Vector3(profile[i].x, profile[i].y, zRight);
       addQuad(p0A, p1A, p1B, p0B);
     }
   } else {
-    // 3 sections: Left wing [-halfW, -cableWidth/2], Center slot [-cableWidth/2, +cableWidth/2], Right wing [+cableWidth/2, +halfW]
+    // Charging Dock with smooth curved central cable channel
     const zLeft0 = -halfW;
     const zLeft1 = -cableWidth / 2;
     const zRight0 = cableWidth / 2;
     const zRight1 = halfW;
 
-    // Notched center profile (lowers the front lip and cradle floor to create cable pass-through channel)
+    // Center notched channel with smooth curved cable drop
     const centerProfile = profile.map(pt => {
-      // Lower front lip and cradle shelf
-      if (pt.x < baseL * 0.45 && pt.y < totalH * 0.5) {
-        return new THREE.Vector2(pt.x, Math.max(6, pt.y - 15));
+      if (pt.x < baseL * 0.48 && pt.y < totalH * 0.55) {
+        return new THREE.Vector2(pt.x, Math.max(6.5, pt.y - 18));
       }
       return pt.clone();
     });
 
-    const N = profile.length;
-
-    // Left Wing
-    triangulateFace(profile, zLeft0, false);
-    triangulateFace(profile, zLeft1, true);
+    triangulateSide(profile, zLeft0, false);
+    triangulateSide(profile, zLeft1, true);
     for (let i = 0; i < N; i++) {
       const next = (i + 1) % N;
       addQuad(
@@ -244,9 +248,8 @@ export function generatePhoneStand(params = {}) {
       );
     }
 
-    // Right Wing
-    triangulateFace(profile, zRight0, false);
-    triangulateFace(profile, zRight1, true);
+    triangulateSide(profile, zRight0, false);
+    triangulateSide(profile, zRight1, true);
     for (let i = 0; i < N; i++) {
       const next = (i + 1) % N;
       addQuad(
@@ -257,7 +260,7 @@ export function generatePhoneStand(params = {}) {
       );
     }
 
-    // Center Notched Channel
+    // Center channel floor & walls
     for (let i = 0; i < N; i++) {
       const next = (i + 1) % N;
       addQuad(
@@ -269,14 +272,38 @@ export function generatePhoneStand(params = {}) {
     }
   }
 
-  // Center model horizontally (X along depth, Y along height, Z along width)
+  // Underside Recesses for 4 Silicone Anti-Slip Feet (Ø8.5mm x 1.2mm deep)
+  const padR = 4.25;
+  const padD = 1.2;
+  const padZOffsets = [-halfW + 12, halfW - 12];
+  const padXOffsets = [14, baseL - 14];
+
+  for (const px of padXOffsets) {
+    for (const pz of padZOffsets) {
+      const padSegs = 16;
+      for (let k = 0; k < padSegs; k++) {
+        const a1 = (k / padSegs) * Math.PI * 2;
+        const a2 = ((k + 1) / padSegs) * Math.PI * 2;
+        const x1 = px + Math.cos(a1) * padR, z1 = pz + Math.sin(a1) * padR;
+        const x2 = px + Math.cos(a2) * padR, z2 = pz + Math.sin(a2) * padR;
+
+        // Pocket walls and bottom disc
+        addQuad(
+          new THREE.Vector3(x1, 0, z1),
+          new THREE.Vector3(x2, 0, z2),
+          new THREE.Vector3(x2, padD, z2),
+          new THREE.Vector3(x1, padD, z1)
+        );
+      }
+    }
+  }
+
   const geom = new THREE.BufferGeometry();
   geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
 
-  // Center X and Z so origin is at center of base
+  // Center horizontally and rest on ground Y = 0
   geom.center();
-  // Adjust so base rests at Y = 0
   geom.computeBoundingBox();
   const minY = geom.boundingBox.min.y;
   geom.translate(0, -minY, 0);

@@ -2748,3 +2748,47 @@ input[type="number"].val:focus { outline: none; border-color: var(--accent); }
 .generator-actions-section {
   padding-top: 6px;
 }
+
+
+/* ── Multi-Plate Selector & ZIP Export Buttons ────────────────────────── */
+.highlight-select {
+  border-color: var(--accent) !important;
+  background: rgba(124, 106, 255, 0.08) !important;
+  font-weight: 600 !important;
+  color: var(--accent-hover) !important;
+}
+
+[data-theme="light"] .highlight-select {
+  color: var(--accent) !important;
+  background: rgba(99, 85, 224, 0.08) !important;
+}
+
+.btn-export-zip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 8px;
+}
+
+.btn-export-zip:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  background: rgba(124, 106, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .btn-export-zip:hover {
+  color: var(--accent);
+  background: rgba(99, 85, 224, 0.10);
+}

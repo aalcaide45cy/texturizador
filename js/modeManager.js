@@ -1,14 +1,15 @@
-/* Texturizador - Mode Manager */
+/* Texturizador - Mode Manager with Multi-Part & Multi-Plate Support */
 
-import { generatePhotoFrame, FRAME_PRESETS, FRAME_SHAPES, FRAME_RELIEFS } from './generators/frameGenerator.js';
+import { generatePhotoFrame, getPhotoFrameParts, createFrontFrame, FRAME_PRESETS, FRAME_SHAPES, FRAME_RELIEFS } from './generators/frameGenerator.js';
 import { generatePhoneStand, PHONE_PRESETS } from './generators/phoneStandGenerator.js';
-import { generateLamp, LAMP_PRESETS, LAMP_SOCKETS } from './generators/lampGenerator.js';
-import { exportSTL, export3MF } from './exporter.js';
+import { generateLamp, LAMP_PRESETS, LAMP_SOCKETS, CALIBRATED_WALLS } from './generators/lampGenerator.js';
+import { exportSTL, export3MF, exportMultiSTLZip } from './exporter.js';
 import { loadGeometry } from './viewer.js';
 import { applyTranslations } from './i18n.js';
 
 let _activeMode = 'texturizer';
 let _currentGeometry = null;
+let _currentParams = {};
 let _updateTimer = null;
 
 // Callbacks set by main.js
@@ -30,7 +31,7 @@ export function initModeManager(callbacks = {}) {
   initPhoneControls();
   initLampControls();
 
-  // Apply translations to new UI elements
+  // Apply translations to UI elements
   applyTranslations();
 }
 
@@ -80,7 +81,6 @@ export function switchMode(mode) {
   } else if (mode === 'lamp') {
     updateLampPreview();
   } else if (mode === 'texturizer') {
-    // Restore texturizer mesh in viewer
     if (callbacks_restoreTexturizerMesh) {
       callbacks_restoreTexturizerMesh();
     }
@@ -92,21 +92,23 @@ export function setRestoreTexturizerCallback(fn) {
   callbacks_restoreTexturizerMesh = fn;
 }
 
-// ─── FRAME GENERATOR CONTROLS ─────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// FRAME GENERATOR CONTROLS
+// ─────────────────────────────────────────────────────────────────────────────
 function initFrameControls() {
   const shapeSelect = document.getElementById('frame-shape-select');
   const presetSelect = document.getElementById('frame-preset-select');
+  const viewSelect = document.getElementById('frame-view-select');
   const photoW = document.getElementById('frame-photo-w');
   const photoH = document.getElementById('frame-photo-h');
   const customDims = document.getElementById('frame-custom-dims');
   const borderWidth = document.getElementById('frame-border-w');
   const frameDepth = document.getElementById('frame-depth');
   const reliefSelect = document.getElementById('frame-relief-select');
-  const kickstand = document.getElementById('frame-kickstand-chk');
-  const wallMount = document.getElementById('frame-wallmount-chk');
 
   const exportStlBtn = document.getElementById('frame-export-stl-btn');
   const export3mfBtn = document.getElementById('frame-export-3mf-btn');
+  const exportZipBtn = document.getElementById('frame-export-zip-btn');
   const sendBtn = document.getElementById('frame-send-texturizer-btn');
 
   function scheduleUpdate() {
@@ -131,7 +133,7 @@ function initFrameControls() {
     });
   }
 
-  [shapeSelect, photoW, photoH, borderWidth, frameDepth, reliefSelect, kickstand, wallMount].forEach(el => {
+  [shapeSelect, viewSelect, photoW, photoH, borderWidth, frameDepth, reliefSelect].forEach(el => {
     if (el) {
       el.addEventListener('input', scheduleUpdate);
       el.addEventListener('change', scheduleUpdate);
@@ -140,20 +142,44 @@ function initFrameControls() {
 
   if (exportStlBtn) {
     exportStlBtn.addEventListener('click', () => {
-      if (_currentGeometry) exportSTL(_currentGeometry.clone(), `${_currentGeometry.userData.name || 'marco'}.stl`);
+      if (_currentGeometry) {
+        exportSTL(_currentGeometry.clone(), `${_currentGeometry.userData.name || 'marco_3d'}.stl`);
+      }
     });
   }
 
   if (export3mfBtn) {
     export3mfBtn.addEventListener('click', () => {
-      if (_currentGeometry) export3MF(_currentGeometry.clone(), `${_currentGeometry.userData.name || 'marco'}.3mf`);
+      if (_currentGeometry) {
+        export3MF(_currentGeometry.clone(), `${_currentGeometry.userData.name || 'marco_3d'}.3mf`);
+      }
     });
   }
 
+  // Descargar ZIP con todas las piezas independientes (marco, tapa, pata, clips)
+  if (exportZipBtn) {
+    exportZipBtn.addEventListener('click', () => {
+      const parts = getPhotoFrameParts(_currentParams.frame || {});
+      const photoW = _currentParams.frame?.photoW || 100;
+      const photoH = _currentParams.frame?.photoH || 150;
+      const shape = _currentParams.frame?.shape || 'rect';
+
+      const partsDict = {
+        [`01_marco_frontal_${shape}_${photoW}x${photoH}.stl`]: parts.front,
+        [`02_tapa_trasera_${shape}_${photoW}x${photoH}.stl`]: parts.backplate,
+        [`03_pata_apoyo_abatible.stl`]: parts.stand,
+        [`04_clips_cierre_4x.stl`]: parts.clips
+      };
+      exportMultiSTLZip(partsDict, `kit_marco_${shape}_${photoW}x${photoH}_piezas.zip`);
+    });
+  }
+
+  // "Enviar a Texturizado": traslada el MARCO FRONTAL decorativo al texturizador
   if (sendBtn) {
     sendBtn.addEventListener('click', () => {
-      if (_currentGeometry && _onSendToTexturizer) {
-        _onSendToTexturizer(_currentGeometry.clone(), _currentGeometry.userData.name || 'marco_fotos');
+      const frontGeom = createFrontFrame(_currentParams.frame || {});
+      if (_onSendToTexturizer) {
+        _onSendToTexturizer(frontGeom, frontGeom.userData.name || 'marco_frontal');
       }
     });
   }
@@ -162,36 +188,38 @@ function initFrameControls() {
 function updateFramePreview() {
   const shape = document.getElementById('frame-shape-select')?.value || 'rectangular';
   const presetKey = document.getElementById('frame-preset-select')?.value || '10x15';
+  const viewMode = document.getElementById('frame-view-select')?.value || 'assembled';
   const photoW = Number(document.getElementById('frame-photo-w')?.value) || 100;
   const photoH = Number(document.getElementById('frame-photo-h')?.value) || 150;
   const borderWidth = Number(document.getElementById('frame-border-w')?.value) || 25;
   const frameDepth = Number(document.getElementById('frame-depth')?.value) || 16;
   const relief = document.getElementById('frame-relief-select')?.value || 'smooth';
-  const kickstand = Boolean(document.getElementById('frame-kickstand-chk')?.checked);
-  const wallMount = Boolean(document.getElementById('frame-wallmount-chk')?.checked);
 
   const bwVal = document.getElementById('frame-border-w-val');
   if (bwVal) bwVal.textContent = `${borderWidth} mm`;
   const fdVal = document.getElementById('frame-depth-val');
   if (fdVal) fdVal.textContent = `${frameDepth} mm`;
 
-  _currentGeometry = generatePhotoFrame({
+  const params = {
     shape,
     photoW,
     photoH,
     borderWidth,
     frameDepth,
     profileStyle: relief,
-    kickstand,
-    wallMount,
+    viewMode,
     isPolaroid: presetKey === 'polaroid'
-  });
+  };
+  _currentParams.frame = params;
 
+  _currentGeometry = generatePhotoFrame(params);
   loadGeometry(_currentGeometry);
   updateGeneratorBadge('frame', _currentGeometry.userData);
 }
 
-// ─── PHONE STAND CONTROLS ─────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// PHONE STAND CONTROLS
+// ─────────────────────────────────────────────────────────────────────────────
 function initPhoneControls() {
   const presetSelect = document.getElementById('phone-preset-select');
   const widthSlider = document.getElementById('phone-width');
@@ -268,26 +296,30 @@ function updatePhonePreview() {
   const lhVal = document.getElementById('phone-lip-height-val');
   if (lhVal) lhVal.textContent = `${lipHeight} mm`;
 
-  _currentGeometry = generatePhoneStand({
+  const params = {
     preset: presetKey,
     width,
     angle,
     slotDepth,
     lipHeight,
     cablePass
-  });
+  };
+  _currentParams.phone = params;
 
+  _currentGeometry = generatePhoneStand(params);
   loadGeometry(_currentGeometry);
   updateGeneratorBadge('phone', _currentGeometry.userData);
 }
 
-// ─── LAMP GENERATOR CONTROLS ──────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// LAMP GENERATOR CONTROLS
+// ─────────────────────────────────────────────────────────────────────────────
 function initLampControls() {
   const presetSelect = document.getElementById('lamp-preset-select');
   const heightSlider = document.getElementById('lamp-height');
   const baseDiamSlider = document.getElementById('lamp-base-diam');
   const topDiamSlider = document.getElementById('lamp-top-diam');
-  const wallSlider = document.getElementById('lamp-wall');
+  const wallSelect = document.getElementById('lamp-wall-calibrated');
   const socketSelect = document.getElementById('lamp-socket-select');
   const cordNotchChk = document.getElementById('lamp-cord-notch-chk');
 
@@ -307,14 +339,13 @@ function initLampControls() {
         if (heightSlider) heightSlider.value = p.height;
         if (baseDiamSlider) baseDiamSlider.value = p.baseDiam;
         if (topDiamSlider) topDiamSlider.value = p.topDiam;
-        if (wallSlider) wallSlider.value = p.wallThickness;
         if (socketSelect) socketSelect.value = p.socket;
       }
       scheduleUpdate();
     });
   }
 
-  [heightSlider, baseDiamSlider, topDiamSlider, wallSlider, socketSelect, cordNotchChk].forEach(el => {
+  [heightSlider, baseDiamSlider, topDiamSlider, wallSelect, socketSelect, cordNotchChk].forEach(el => {
     if (el) {
       el.addEventListener('input', scheduleUpdate);
       el.addEventListener('change', scheduleUpdate);
@@ -344,10 +375,10 @@ function initLampControls() {
 
 function updateLampPreview() {
   const presetKey = document.getElementById('lamp-preset-select')?.value || 'pleated';
-  const height = Number(document.getElementById('lamp-height')?.value) || 180;
-  const baseDiam = Number(document.getElementById('lamp-base-diam')?.value) || 110;
-  const topDiam = Number(document.getElementById('lamp-top-diam')?.value) || 85;
-  const wall = Number(document.getElementById('lamp-wall')?.value) || 2.0;
+  const height = Number(document.getElementById('lamp-height')?.value) || 185;
+  const baseDiam = Number(document.getElementById('lamp-base-diam')?.value) || 115;
+  const topDiam = Number(document.getElementById('lamp-top-diam')?.value) || 88;
+  const wall = Number(document.getElementById('lamp-wall-calibrated')?.value) || 1.26;
   const socket = document.getElementById('lamp-socket-select')?.value || 'e14';
   const cordNotch = Boolean(document.getElementById('lamp-cord-notch-chk')?.checked);
 
@@ -357,10 +388,8 @@ function updateLampPreview() {
   if (bdVal) bdVal.textContent = `${baseDiam} mm`;
   const tdVal = document.getElementById('lamp-top-diam-val');
   if (tdVal) tdVal.textContent = `${topDiam} mm`;
-  const wVal = document.getElementById('lamp-wall-val');
-  if (wVal) wVal.textContent = `${wall} mm`;
 
-  _currentGeometry = generateLamp({
+  const params = {
     preset: presetKey,
     height,
     baseDiam,
@@ -368,8 +397,10 @@ function updateLampPreview() {
     wallThickness: wall,
     socket,
     cordNotch
-  });
+  };
+  _currentParams.lamp = params;
 
+  _currentGeometry = generateLamp(params);
   loadGeometry(_currentGeometry);
   updateGeneratorBadge('lamp', _currentGeometry.userData);
 }

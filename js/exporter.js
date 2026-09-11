@@ -231,3 +231,49 @@ export function export3MF(geometry, filename = 'textured.3mf') {
     'application/vnd.ms-package.3dmanufacturing-3dmodel+xml'
   );
 }
+
+/**
+ * Export multiple geometries bundled into a single ZIP file containing separate binary STLs.
+ * @param {Record<string, THREE.BufferGeometry>} partsDict  – e.g. { '01_marco.stl': geom1, '02_tapa.stl': geom2 }
+ * @param {string} [filename]
+ */
+export function exportMultiSTLZip(partsDict, filename = 'kit_impresion_3d.zip') {
+  const files = {};
+  for (const [partName, geom] of Object.entries(partsDict)) {
+    if (!geom || !geom.attributes || !geom.attributes.position) continue;
+    const posArr = geom.attributes.position.array;
+    const norArr = geom.attributes.normal ? geom.attributes.normal.array : null;
+    const triCount = (posArr.length / 9) | 0;
+
+    const bufLen = 84 + 50 * triCount;
+    const buffer = new ArrayBuffer(bufLen);
+    const bytes  = new Uint8Array(buffer);
+    const view   = new DataView(buffer);
+
+    view.setUint32(80, triCount, true);
+    const posSrc = new Uint8Array(posArr.buffer, posArr.byteOffset, posArr.byteLength);
+    const norSrc = norArr ? new Uint8Array(norArr.buffer, norArr.byteOffset, norArr.byteLength) : null;
+
+    for (let i = 0; i < triCount; i++) {
+      const dst = 84 + i * 50;
+      const srcOff = i * 36;
+      if (norSrc) {
+        bytes.set(norSrc.subarray(srcOff, srcOff + 12), dst);
+      } else {
+        const b = i * 9;
+        const ux = posArr[b+3]-posArr[b], uy = posArr[b+4]-posArr[b+1], uz = posArr[b+5]-posArr[b+2];
+        const vx = posArr[b+6]-posArr[b], vy = posArr[b+7]-posArr[b+1], vz = posArr[b+8]-posArr[b+2];
+        const nx = uy*vz-uz*vy, ny = uz*vx-ux*vz, nz = ux*vy-uy*vx;
+        const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+        view.setFloat32(dst,     nx/len, true);
+        view.setFloat32(dst + 4, ny/len, true);
+        view.setFloat32(dst + 8, nz/len, true);
+      }
+      bytes.set(posSrc.subarray(srcOff, srcOff + 36), dst + 12);
+    }
+    files[partName] = bytes;
+  }
+
+  const zipped = zipSync(files, { level: 6 });
+  triggerDownload(zipped, filename, 'application/zip');
+}

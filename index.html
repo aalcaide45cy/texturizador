@@ -773,6 +773,17 @@
             <span class="section-title" data-i18n="frameGen.secPresets">Plantilla y Formato</span>
           </div>
           <div class="field-row">
+            <label for="frame-view-select" data-i18n="frameGen.viewMode">Vista / Placa de impresión</label>
+            <select id="frame-view-select" class="highlight-select">
+              <option value="assembled" selected data-i18n="frameGen.viewAssembled">👀 Montado completo (ensamblado 3D)</option>
+              <option value="plate-all" data-i18n="frameGen.viewPlateAll">🖨️ Cama completa (todas las piezas planas)</option>
+              <option value="plate-frame" data-i18n="frameGen.viewPlateFrame">🖼️ Placa 1: Marco Frontal</option>
+              <option value="plate-back" data-i18n="frameGen.viewPlateBack">📄 Placa 2: Tapa Trasera</option>
+              <option value="plate-stand" data-i18n="frameGen.viewPlateStand">🦵 Placa 3: Pata de Apoyo</option>
+              <option value="plate-clips" data-i18n="frameGen.viewPlateClips">🔘 Placa 4: Clips de Cierre</option>
+            </select>
+          </div>
+          <div class="field-row">
             <label for="frame-shape-select" data-i18n="frameGen.shape">Forma del marco</label>
             <select id="frame-shape-select">
               <option value="rectangular" data-i18n="frameGen.shapeRect">Rectangular clásico</option>
@@ -858,11 +869,15 @@
         <section class="panel-section generator-actions-section">
           <button type="button" id="frame-send-texturizer-btn" class="btn-send-texturizer">
             <span class="sparkle-icon">✨</span>
-            <span data-i18n="frameGen.sendTexturizer">Enviar a Texturizado</span>
+            <span data-i18n="frameGen.sendTexturizer">Enviar Marco a Texturizado</span>
+          </button>
+          <button type="button" id="frame-export-zip-btn" class="btn-export-zip">
+            <span>📦</span>
+            <span data-i18n="frameGen.exportZip">Descargar Kit de Piezas (ZIP)</span>
           </button>
           <div class="export-buttons">
-            <button type="button" id="frame-export-stl-btn" class="export-btn" data-i18n="ui.exportStl">Exportar STL</button>
-            <button type="button" id="frame-export-3mf-btn" class="export-btn" data-i18n="ui.export3mf">Exportar 3MF</button>
+            <button type="button" id="frame-export-stl-btn" class="export-btn" data-i18n="frameGen.exportActiveStl">Exportar Vista (STL)</button>
+            <button type="button" id="frame-export-3mf-btn" class="export-btn" data-i18n="frameGen.exportActive3mf">Exportar Vista (3MF)</button>
           </div>
         </section>
       </div> <!-- /#mode-panel-frame -->
@@ -1002,12 +1017,14 @@
             </div>
             <input type="range" id="lamp-top-diam" min="40" max="240" value="85" />
           </div>
-          <div class="field-row slider-field">
-            <div class="slider-header">
-              <label for="lamp-wall" data-i18n="lampGen.wallThickness">Grosor de pared traslúcida</label>
-              <span id="lamp-wall-val" class="slider-val">2.0 mm</span>
-            </div>
-            <input type="range" id="lamp-wall" min="1.2" max="4.0" step="0.2" value="2.0" />
+          <div class="field-row">
+            <label for="lamp-wall-calibrated" data-i18n="lampGen.wallThickness">Grosor de pared (calibrado FDM)</label>
+            <select id="lamp-wall-calibrated">
+              <option value="0.84">0.84 mm (2 perímetros sólidos exactos)</option>
+              <option value="1.26" selected>1.26 mm (3 perímetros sólidos - recomendado)</option>
+              <option value="1.68">1.68 mm (4 perímetros sólidos)</option>
+              <option value="2.10">2.10 mm (5 perímetros sólidos)</option>
+            </select>
           </div>
         </section>
 

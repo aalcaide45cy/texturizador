@@ -377,4 +377,16 @@ export default {
   "lampGen.socketVase": "Modo Jarrón / Abierta (Vase Mode)",
   "lampGen.cordNotch": "Ranura pasacables en la base (apoyo plano en mesa)",
   "lampGen.sendTexturizer": "Enviar a Texturizado",
+
+  // Multi-Plate Frame Keys
+  "frameGen.viewMode": "Vista / Placa de impresión",
+  "frameGen.viewAssembled": "👀 Montado completo (ensamblado 3D)",
+  "frameGen.viewPlateAll": "🖨️ Cama completa (todas las piezas planas)",
+  "frameGen.viewPlateFrame": "🖼️ Placa 1: Marco Frontal",
+  "frameGen.viewPlateBack": "📄 Placa 2: Tapa Trasera",
+  "frameGen.viewPlateStand": "🦵 Placa 3: Pata de Apoyo",
+  "frameGen.viewPlateClips": "🔘 Placa 4: Clips de Cierre",
+  "frameGen.exportZip": "Descargar Kit de Piezas (ZIP)",
+  "frameGen.exportActiveStl": "Exportar Vista (STL)",
+  "frameGen.exportActive3mf": "Exportar Vista (3MF)",
 };

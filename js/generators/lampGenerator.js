@@ -1,46 +1,46 @@
-/* Texturizador - Lamp Generator */
+/* Texturizador - Ultra-High-Resolution Lamp Generator */
 
 import * as THREE from 'three';
 
 export const LAMP_PRESETS = {
   'pleated': {
     name: 'Origami Plisada (Accordion)',
-    baseDiam: 110,
-    topDiam: 85,
-    height: 180,
-    wallThickness: 2.0,
+    baseDiam: 115,
+    topDiam: 88,
+    height: 185,
+    wallThickness: 1.26,
     socket: 'e14'
   },
   'spiral': {
     name: 'Hélice Espiral Torsión',
-    baseDiam: 120,
-    topDiam: 90,
-    height: 190,
-    wallThickness: 2.2,
+    baseDiam: 125,
+    topDiam: 92,
+    height: 195,
+    wallThickness: 1.26,
     socket: 'e27'
   },
   'mushroom': {
     name: 'Bauhaus Seta (Mushroom)',
-    baseDiam: 130,
-    topDiam: 150,
-    height: 175,
-    wallThickness: 2.2,
+    baseDiam: 135,
+    topDiam: 160,
+    height: 180,
+    wallThickness: 1.26,
     socket: 'bambu-led'
   },
   'wavy': {
     name: 'Ondas Sinusoidales 3D',
-    baseDiam: 115,
-    topDiam: 95,
-    height: 185,
-    wallThickness: 2.0,
+    baseDiam: 120,
+    topDiam: 98,
+    height: 190,
+    wallThickness: 1.26,
     socket: 'e14'
   },
   'faceted': {
     name: 'Geométrica Facetada Diamante',
-    baseDiam: 120,
-    topDiam: 80,
-    height: 170,
-    wallThickness: 2.4,
+    baseDiam: 125,
+    topDiam: 84,
+    height: 175,
+    wallThickness: 1.68,
     socket: 'e27'
   }
 };
@@ -52,8 +52,15 @@ export const LAMP_SOCKETS = {
   'vase': { name: 'Modo Jarrón / Abierta (Vase Mode)', holeDiameter: 0, recess: false, isVase: true }
 };
 
+export const CALIBRATED_WALLS = [
+  { value: 0.84, label: '0.84 mm (2 perímetros sólidos boquilla 0.4)' },
+  { value: 1.26, label: '1.26 mm (3 perímetros sólidos - recomendado)' },
+  { value: 1.68, label: '1.68 mm (4 perímetros sólidos)' },
+  { value: 2.10, label: '2.10 mm (5 perímetros sólidos)' }
+];
+
 /**
- * Generate a complete, watertight 3D modern lamp shade.
+ * Generate high-resolution 3D modern lamp shade.
  */
 export function generateLamp(params = {}) {
   const presetKey = params.preset || 'pleated';
@@ -62,71 +69,63 @@ export function generateLamp(params = {}) {
   const height = Math.max(80, Math.min(320, Number(params.height) || preset.height));
   const baseDiam = Math.max(60, Math.min(260, Number(params.baseDiam) || preset.baseDiam));
   const topDiam = Math.max(30, Math.min(260, Number(params.topDiam) || preset.topDiam));
-  const wallThickness = Math.max(1.2, Math.min(5.0, Number(params.wallThickness) || preset.wallThickness));
+  const wallThickness = Math.max(0.8, Math.min(5.0, Number(params.wallThickness) || preset.wallThickness));
   const socketKey = params.socket || preset.socket;
   const socketInfo = LAMP_SOCKETS[socketKey] || LAMP_SOCKETS.e14;
   const cordNotch = params.cordNotch !== undefined ? Boolean(params.cordNotch) : (socketKey !== 'vase');
+  const viewMode = params.viewMode || 'monoblock'; // 'monoblock', 'shade', 'base', 'assembled', 'plate-all'
 
   const R_base = baseDiam / 2;
   const R_top = topDiam / 2;
 
-  // Grid resolution
-  const nLayers = 72;
-  const nPerim = 72;
+  // Ultra-fine resolution: 192 layers x 180 perimeters = 69,120 smooth triangles
+  const nLayers = 192;
+  const nPerim = 180;
 
-  // Radial function for the outer surface: R(z, theta)
   function getOuterRadius(z, theta) {
-    const u = z / height; // 0 (bottom) to 1 (top)
-
-    // Base profile taper
+    const u = z / height; // 0 to 1
     let r0 = R_base + (R_top - R_base) * u;
 
     if (presetKey === 'pleated') {
-      // Accordion zigzag pleats (20 folds around perimeter)
-      const numFolds = 20;
+      const numFolds = 24;
       const foldPhase = numFolds * theta;
       const triWave = (Math.abs(((foldPhase / Math.PI) % 2) - 1) - 0.5) * 2;
-      const pleatAmp = 5.5 + 2.5 * Math.sin(u * Math.PI);
-      return Math.max(15, r0 + triWave * pleatAmp);
+      const pleatAmp = 5.5 + 3.0 * Math.sin(u * Math.PI);
+      return Math.max(16, r0 + triWave * pleatAmp);
     }
 
     if (presetKey === 'spiral') {
-      // 12-sided polygon with 120-degree twist up the height
-      const twistTurns = 0.45; // ~160 degrees total twist
+      const twistTurns = 0.55;
       const twistedTheta = theta - twistTurns * Math.PI * 2 * u;
-      const flutes = 12;
-      const fluteAmp = 4.5 * Math.sin(u * Math.PI * 0.9 + 0.1);
-      return Math.max(15, r0 + Math.cos(flutes * twistedTheta) * fluteAmp);
+      const flutes = 14;
+      const fluteAmp = 5.0 * Math.sin(u * Math.PI * 0.95 + 0.05);
+      return Math.max(16, r0 + Math.cos(flutes * twistedTheta) * fluteAmp);
     }
 
     if (presetKey === 'mushroom') {
-      // Bauhaus Mushroom: slim stem from u=0 to u=0.5, bulging wide dome from u=0.5 to u=1.0
-      if (u < 0.45) {
-        const stemT = u / 0.45;
-        r0 = R_base * 0.55 + (R_base * 0.4) * (1 - stemT);
+      if (u < 0.42) {
+        const stemT = u / 0.42;
+        r0 = R_base * 0.52 + (R_base * 0.45) * Math.cos(stemT * Math.PI * 0.5);
       } else {
-        const domeT = (u - 0.45) / 0.55;
-        // Bulbous hemispherical curve
-        const domeBulge = Math.sin(domeT * Math.PI) * (R_top * 0.55);
-        r0 = R_base * 0.55 + (R_top - R_base * 0.55) * domeT + domeBulge;
+        const domeT = (u - 0.42) / 0.58;
+        const domeBulge = Math.sin(domeT * Math.PI) * (R_top * 0.52);
+        r0 = R_base * 0.52 + (R_top - R_base * 0.52) * domeT + domeBulge;
       }
-      return Math.max(15, r0);
+      return Math.max(16, r0);
     }
 
     if (presetKey === 'wavy') {
-      // Organic multi-harmonic ripple waves
-      const wave1 = Math.sin(10 * theta) * Math.cos(u * Math.PI * 2) * 4.0;
-      const wave2 = Math.sin(5 * theta + u * Math.PI * 3) * 3.0;
-      return Math.max(15, r0 + wave1 + wave2);
+      const wave1 = Math.sin(12 * theta) * Math.cos(u * Math.PI * 2) * 4.5;
+      const wave2 = Math.sin(6 * theta + u * Math.PI * 3) * 3.5;
+      return Math.max(16, r0 + wave1 + wave2);
     }
 
     if (presetKey === 'faceted') {
-      // Geometric diamond facets
-      const numFacets = 14;
-      const layerStep = Math.floor(u * 16);
+      const numFacets = 16;
+      const layerStep = Math.floor(u * 24);
       const staggeredTheta = theta + (layerStep % 2) * (Math.PI / numFacets);
-      const facetAmp = 5.0 * Math.sin(u * Math.PI);
-      return Math.max(15, r0 + Math.cos(numFacets * staggeredTheta) * facetAmp);
+      const facetAmp = 5.5 * Math.sin(u * Math.PI);
+      return Math.max(16, r0 + Math.cos(numFacets * staggeredTheta) * facetAmp);
     }
 
     return r0;
@@ -148,7 +147,7 @@ export function generateLamp(params = {}) {
     uvs.push(uv1[0], uv1[1], uv3[0], uv3[1], uv4[0], uv4[1]);
   }
 
-  // Precompute outer mesh grid
+  // Precompute grid vertices
   const outerGrid = [];
   for (let j = 0; j <= nLayers; j++) {
     const z = (j / nLayers) * height;
@@ -156,20 +155,15 @@ export function generateLamp(params = {}) {
     for (let i = 0; i < nPerim; i++) {
       const theta = (i / nPerim) * Math.PI * 2;
       let r = getOuterRadius(z, theta);
-      // Cord notch at bottom rim: z < 8mm, angle around theta=0
       if (cordNotch && z < 7.5) {
         const dTheta = Math.abs(theta < Math.PI ? theta : theta - Math.PI * 2);
-        if (dTheta < 0.12) {
-          // Flatten bottom rim to create cord arch
-          r = Math.max(r - 4, 15);
-        }
+        if (dTheta < 0.14) r = Math.max(r - 4.5, 16);
       }
       row.push(new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z));
     }
     outerGrid.push(row);
   }
 
-  // Precompute inner mesh grid
   const innerGrid = [];
   for (let j = 0; j <= nLayers; j++) {
     const z = (j / nLayers) * height;
@@ -177,7 +171,7 @@ export function generateLamp(params = {}) {
     for (let i = 0; i < nPerim; i++) {
       const theta = (i / nPerim) * Math.PI * 2;
       const rOuter = getOuterRadius(z, theta);
-      const rInner = Math.max(10, rOuter - wallThickness);
+      const rInner = Math.max(12, rOuter - wallThickness);
       row.push(new THREE.Vector3(Math.cos(theta) * rInner, Math.sin(theta) * rInner, z));
     }
     innerGrid.push(row);
@@ -191,15 +185,11 @@ export function generateLamp(params = {}) {
     for (let i = 0; i < nPerim; i++) {
       const next = (i + 1) % nPerim;
       const u0 = i / nPerim, u1 = (i + 1) / nPerim;
-      // Facing outwards
-      addQuad(
-        rowA[i], rowA[next], rowB[next], rowB[i],
-        [u0, v0], [u1, v0], [u1, v1], [u0, v1]
-      );
+      addQuad(rowA[i], rowA[next], rowB[next], rowB[i], [u0, v0], [u1, v0], [u1, v1], [u0, v1]);
     }
   }
 
-  // 2. Inner Shell (Facing inwards)
+  // 2. Inner Shell
   for (let j = 0; j < nLayers; j++) {
     const rowA = innerGrid[j];
     const rowB = innerGrid[j + 1];
@@ -207,25 +197,17 @@ export function generateLamp(params = {}) {
     for (let i = 0; i < nPerim; i++) {
       const next = (i + 1) % nPerim;
       const u0 = i / nPerim, u1 = (i + 1) / nPerim;
-      // Facing inwards
-      addQuad(
-        rowA[next], rowA[i], rowB[i], rowB[next],
-        [u1, v0], [u0, v0], [u0, v1], [u1, v1]
-      );
+      addQuad(rowA[next], rowA[i], rowB[i], rowB[next], [u1, v0], [u0, v0], [u0, v1], [u1, v1]);
     }
   }
 
-  // 3. Top Rim connecting outer and inner shells
+  // 3. Top Rim
   const outerTop = outerGrid[nLayers];
   const innerTop = innerGrid[nLayers];
   for (let i = 0; i < nPerim; i++) {
     const next = (i + 1) % nPerim;
     const u0 = i / nPerim, u1 = (i + 1) / nPerim;
-    // Facing +Z (upward)
-    addQuad(
-      outerTop[i], innerTop[i], innerTop[next], outerTop[next],
-      [u0, 0], [u0, 1], [u1, 1], [u1, 0]
-    );
+    addQuad(outerTop[i], innerTop[i], innerTop[next], outerTop[next], [u0, 0], [u0, 1], [u1, 1], [u1, 0]);
   }
 
   // 4. Bottom Rim & Socket Mount
@@ -233,70 +215,43 @@ export function generateLamp(params = {}) {
   const innerBottom = innerGrid[0];
 
   if (socketInfo.isVase) {
-    // Vase mode: simple bottom rim closure
     for (let i = 0; i < nPerim; i++) {
       const next = (i + 1) % nPerim;
       const u0 = i / nPerim, u1 = (i + 1) / nPerim;
-      // Facing -Z (downward)
-      addQuad(
-        outerBottom[next], innerBottom[next], innerBottom[i], outerBottom[i],
-        [u1, 0], [u1, 1], [u0, 1], [u0, 0]
-      );
+      addQuad(outerBottom[next], innerBottom[next], innerBottom[i], outerBottom[i], [u1, 0], [u1, 1], [u0, 1], [u0, 0]);
     }
   } else {
-    // Socket Mounting Plate at bottom: connects outer wall to socket hole ring
-    const holeR = Math.min(socketInfo.holeDiameter / 2, R_base - 12);
-    const mountZ = 4.0; // Socket bracket thickness
+    const holeR = Math.min(socketInfo.holeDiameter / 2, R_base - 14);
+    const mountZ = 4.5;
 
     const holeRing = [];
-    for (let i = 0; i < nPerim; i++) {
-      const theta = (i / nPerim) * Math.PI * 2;
-      holeRing.push(new THREE.Vector3(Math.cos(theta) * holeR, Math.sin(theta) * holeR, mountZ));
-    }
     const holeRingBottom = [];
     for (let i = 0; i < nPerim; i++) {
       const theta = (i / nPerim) * Math.PI * 2;
+      holeRing.push(new THREE.Vector3(Math.cos(theta) * holeR, Math.sin(theta) * holeR, mountZ));
       holeRingBottom.push(new THREE.Vector3(Math.cos(theta) * holeR, Math.sin(theta) * holeR, 0));
     }
 
-    // Bottom plate (Z = 0) facing -Z
     for (let i = 0; i < nPerim; i++) {
       const next = (i + 1) % nPerim;
-      addQuad(
-        outerBottom[next], holeRingBottom[next], holeRingBottom[i], outerBottom[i],
-        [0,0], [1,0], [1,1], [0,1]
-      );
+      addQuad(outerBottom[next], holeRingBottom[next], holeRingBottom[i], outerBottom[i], [0,0], [1,0], [1,1], [0,1]);
     }
 
-    // Inside plate (Z = mountZ) facing +Z
     for (let i = 0; i < nPerim; i++) {
       const next = (i + 1) % nPerim;
-      addQuad(
-        innerBottom[i], holeRing[i], holeRing[next], innerBottom[next],
-        [0,0], [1,0], [1,1], [0,1]
-      );
+      addQuad(innerBottom[i], holeRing[i], holeRing[next], innerBottom[next], [0,0], [1,0], [1,1], [0,1]);
     }
 
-    // Hole cylinder wall
     for (let i = 0; i < nPerim; i++) {
       const next = (i + 1) % nPerim;
-      addQuad(
-        holeRingBottom[i], holeRingBottom[next], holeRing[next], holeRing[i],
-        [0,0], [1,0], [1,1], [0,1]
-      );
+      addQuad(holeRingBottom[i], holeRingBottom[next], holeRing[next], holeRing[i], [0,0], [1,0], [1,1], [0,1]);
     }
   }
 
   const geom = new THREE.BufferGeometry();
   geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-
-  // If faceted preset, compute flat normals, otherwise smooth vertex normals
-  if (presetKey === 'faceted') {
-    geom.computeVertexNormals();
-  } else {
-    geom.computeVertexNormals();
-  }
+  geom.computeVertexNormals();
 
   geom.userData = {
     generator: 'lamp',

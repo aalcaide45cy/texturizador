@@ -374,4 +374,16 @@ export default {
   "lampGen.socketVase": "Vase Mode / Open Shade",
   "lampGen.cordNotch": "Base cable notch (sits flat on table)",
   "lampGen.sendTexturizer": "Send to Texturizer",
+
+  // Multi-Plate Frame Keys
+  "frameGen.viewMode": "View / Print Plate",
+  "frameGen.viewAssembled": "👀 Fully Assembled (3D view)",
+  "frameGen.viewPlateAll": "🖨️ Full Bed (all parts flat)",
+  "frameGen.viewPlateFrame": "🖼️ Plate 1: Front Frame",
+  "frameGen.viewPlateBack": "📄 Plate 2: Backing Plate",
+  "frameGen.viewPlateStand": "🦵 Plate 3: Easel Stand",
+  "frameGen.viewPlateClips": "🔘 Plate 4: Turn Clips",
+  "frameGen.exportZip": "Download Parts Kit (ZIP)",
+  "frameGen.exportActiveStl": "Export View (STL)",
+  "frameGen.exportActive3mf": "Export View (3MF)",
 };
